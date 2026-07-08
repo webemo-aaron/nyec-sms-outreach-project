@@ -127,6 +127,11 @@ The Dockerfiles support an optional BuildKit secret named `extra_ca`; normal
 builds do not need a certificate file. The CA build script does not commit or
 copy private `.env` files or member data.
 
+The Node-based Docker build stages pin npm to `9.8.1` because npm 10.x has been
+observed to fail behind the work laptop's Zscaler proxy with `Exit handler never
+called`. The UI build stage also sets `NODE_ENV=development` so build-only tools
+such as `vue-tsc` are installed before the production static assets are created.
+
 - If Docker builds pass but Twilio or another outbound runtime call fails,
   treat it as runtime network/certificate policy and validate that path
   separately from the image build.

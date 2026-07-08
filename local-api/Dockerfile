@@ -16,6 +16,7 @@ RUN --mount=type=secret,id=extra_ca,target=/tmp/extra-ca.crt,required=false \
     fi
 
 COPY package*.json ./
+RUN npm install -g npm@9.8.1
 RUN npm ci --omit=dev
 
 COPY src ./src
