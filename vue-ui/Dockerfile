@@ -5,6 +5,7 @@ ARG VITE_API_BASE_URL=http://localhost:3001/api/nyec
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 RUN --mount=type=secret,id=extra_ca,target=/tmp/extra-ca.crt,required=false \
+    set -e; \
     if [ -s /tmp/extra-ca.crt ]; then \
       mkdir -p /etc/ssl/certs /usr/local/share/ca-certificates; \
       cat /tmp/extra-ca.crt >> /etc/ssl/certs/ca-certificates.crt; \
@@ -16,7 +17,7 @@ RUN --mount=type=secret,id=extra_ca,target=/tmp/extra-ca.crt,required=false \
     fi
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --include=dev
 
 COPY index.html vite.config.ts tsconfig.json ./
 COPY src ./src

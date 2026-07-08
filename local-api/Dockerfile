@@ -4,6 +4,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 RUN --mount=type=secret,id=extra_ca,target=/tmp/extra-ca.crt,required=false \
+    set -e; \
     if [ -s /tmp/extra-ca.crt ]; then \
       mkdir -p /etc/ssl/certs /usr/local/share/ca-certificates; \
       cat /tmp/extra-ca.crt >> /etc/ssl/certs/ca-certificates.crt; \
