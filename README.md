@@ -1,18 +1,11 @@
-# NYeC SMS Outreach Manager Starter Project
+# NYeC SMS Outreach Manager
 
-This repository is a coding-agent-ready starter implementation for the NYeC SMS Outreach Manager MVP.
+This repository now carries two parallel tracks:
 
-The first version focuses only on operational SMS outreach:
+1. The production-oriented IRIS/ObjectScript foundation under `iris/`.
+2. The laptop-operational Node/Vue workflow under `local-api/` and `vue-ui/`.
 
-1. Configure and manage Twilio.
-2. Load a NYeC Medicaid Eligibility File (MEF) into IRIS.
-3. Define an outreach campaign from a MEF cohort.
-4. Define a customer-specific SMS message.
-5. Execute a defined number of SMS messages per day starting at 9:00 AM Monday–Friday.
-6. Track dispatch status, opt-outs, retries, costs, billing usage, and audit events.
-7. Send patients to an external survey/registration system.
-
-The survey system is external and owns registration, authentication, survey completion, and survey analytics.
+For day-to-day local testing on this branch, use the Node API plus Vue UI.
 
 ## Repository Layout
 
@@ -28,64 +21,70 @@ iris/
   tests/cls/            %UnitTest starter tests
   module.xml            ZPM-style module descriptor
 
-vue-ui/
-  package.json
-  vite.config.ts
-  src/
-    App.vue
-    router.ts
-    api/client.ts
-    views/...           Mocked operational UI screens
-    styles.css          AGUI light/dark adaptive style system
+local-api/
+  src/                  Node.js local operational API
+  test/                 Node test suite
 
-api/openapi.yaml         REST API contract
-implementation-plan.md   Step-by-step engineering plan
-coding-agent-prompts.md  Prompts to hand to implementation agents
+vue-ui/
+  src/                  Vue 3 operational UI
+
+api/openapi.yaml        Operational laptop API contract
+coding-agent-prompts.md Current backend/frontend/testing prompts
+docs/testing/           Laptop testing checklist and evidence notes
 ```
 
-## Quick Start: Node/Vue Local App
+## Laptop Operational Runbook
 
-The fastest laptop path is the Vue UI plus the included Node.js local API.
-The IRIS/ObjectScript files remain in the project as the production backend
-foundation, but they are not required for local Node/Vue testing.
+This runbook is the end-to-end local workflow for July 8, 2026. It covers the
+operator path the Node/Vue stack is expected to support on a laptop, including
+the HTTP callback simulations used during testing.
+
+### 1. Install and start the local API
 
 ```bash
 cd local-api
 cp .env.example .env
-# Edit .env with Twilio test credentials.
+npm install
 npm test
 npm run dev
 ```
+
+Expected API base URL:
+
+```text
+http://127.0.0.1:3001/api/nyec
+```
+
+Health check:
+
+```bash
+curl http://127.0.0.1:3001/health
+```
+
+### 2. Install and start the Vue UI
 
 In a second terminal:
 
 ```bash
 cd vue-ui
-cp .env.example .env
+cp .env.example .env 2>/dev/null || true
 npm install
 npm run dev
 ```
 
-Open the Vite URL, usually:
+Expected UI URL:
 
 ```text
-http://localhost:5173
+http://127.0.0.1:5173
 ```
 
-The Vue app calls:
+The UI calls the local API directly. If the API is down, the UI falls back to
+deterministic mock data, which is useful for design review but not for
+operational validation.
 
-```text
-http://localhost:3001/api/nyec
-```
+### 3. Configure Twilio test credentials
 
-If the API is unavailable, the UI still falls back to deterministic mock data
-for review mode, but development builds now log a console warning when that
-happens.
-
-### Twilio Test Credentials
-
-Use Twilio test credentials in `local-api/.env`; do not store real credentials
-in source files.
+Edit `local-api/.env` and supply Twilio test credentials only:
 
 ```env
 PORT=3001
@@ -96,80 +95,240 @@ TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_AUTH_TOKEN=your_test_auth_token
 TWILIO_MESSAGING_SERVICE_SID=MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_FROM_NUMBER=
-TWILIO_CALLBACK_BASE_URL=http://localhost:3001
+TWILIO_CALLBACK_BASE_URL=http://127.0.0.1:3001
 ```
 
-`TWILIO_MESSAGING_SERVICE_SID` is preferred. If you are not using a messaging
-service, leave it blank and set `TWILIO_FROM_NUMBER`.
+Then open the UI at `/twilio` and confirm:
 
-The local API exposes:
+- `Mode` is `TEST`
+- `Callback Base URL` is `http://127.0.0.1:3001`
+- `Send Test SMS` succeeds or returns a clear Twilio configuration error
 
-```text
-GET  /health
-GET  /api/nyec/dashboard
-GET  /api/nyec/twilio/config
-POST /api/nyec/twilio/test
-POST /api/nyec/sms/status
-POST /api/nyec/sms/inbound
+You can also validate the API surface directly:
+
+```bash
+curl http://127.0.0.1:3001/api/nyec/twilio/config
 ```
 
-Test-send example:
+Test send:
 
 ```bash
 curl -i \
   -H 'content-type: application/json' \
-  -d '{"to":"+15005550006","body":"NYeC outreach test"}' \
-  http://localhost:3001/api/nyec/twilio/test
+  -d '{"to":"+15005550006","body":"NYeC outreach local test"}' \
+  http://127.0.0.1:3001/api/nyec/twilio/test
 ```
 
-With missing Twilio credentials, the endpoint returns a clear
-`TWILIO_NOT_CONFIGURED` JSON error instead of silently pretending to send.
+Twilio's magic test number `+15005550006` is appropriate for local test-mode
+verification.
 
-## Quick Start: Frontend Only
+### 4. Import a sample MEF CSV
+
+The operational contract expects MEF import through the API. Keep the sample
+payload synthetic; do not use live member data on a laptop.
+
+Sample CSV content:
+
+```csv
+MemberID,FirstName,LastName,DOB,Phone,Facility,NpiLocation,SurveyLink
+10001,Ana,Test,1986-01-15,+15555550101,NYC Health Center A,1234567890,https://survey.example.test/r/10001
+10002,Ben,Test,1979-04-22,+15555550102,NYC Health Center A,1234567890,https://survey.example.test/r/10002
+10003,Cam,Test,1990-09-30,+15555550103,NYC Health Center B,1234567891,https://survey.example.test/r/10003
+```
+
+Expected import request:
 
 ```bash
-cd vue-ui
-npm install
+curl -i \
+  -H 'content-type: application/json' \
+  -d @- \
+  http://127.0.0.1:3001/api/nyec/mef/batches <<'EOF'
+{
+  "fileName": "sample-mef.csv",
+  "mefVersion": "2026-W28-LOCAL",
+  "source": "laptop-test",
+  "csv": "MemberID,FirstName,LastName,DOB,Phone,Facility,NpiLocation,SurveyLink\n10001,Ana,Test,1986-01-15,+15555550101,NYC Health Center A,1234567890,https://survey.example.test/r/10001\n10002,Ben,Test,1979-04-22,+15555550102,NYC Health Center A,1234567890,https://survey.example.test/r/10002\n10003,Cam,Test,1990-09-30,+15555550103,NYC Health Center B,1234567891,https://survey.example.test/r/10003\n"
+}
+EOF
+```
+
+Read back the imported batch list:
+
+```bash
+curl http://127.0.0.1:3001/api/nyec/mef/batches
+```
+
+### 5. Create a campaign
+
+Use the UI at `/campaigns/new` or call the API directly:
+
+```bash
+curl -i \
+  -H 'content-type: application/json' \
+  -d '{
+    "name":"Laptop Operational Test Campaign",
+    "customerName":"NYC Health Partner",
+    "facility":"NYC Health Center A",
+    "npiLocation":"1234567890",
+    "mefBatchId":12,
+    "dailyLimit":2,
+    "startDate":"2026-07-13",
+    "startTime":"09:00",
+    "externalSurveyBaseUrl":"https://survey.example.test/register",
+    "smsBody":"Hello {{FirstName}}, please complete your questionnaire at {{SurveyLink}}. Reply STOP to opt out."
+  }' \
+  http://127.0.0.1:3001/api/nyec/campaigns
+```
+
+Confirm the campaign exists:
+
+```bash
+curl http://127.0.0.1:3001/api/nyec/campaigns
+```
+
+### 6. Run a manual dispatch
+
+The laptop workflow expects a manual dispatch endpoint so operators can test a
+single batch without waiting for the scheduler.
+
+Expected request:
+
+```bash
+curl -i \
+  -H 'content-type: application/json' \
+  -d '{"limit":2,"trigger":"manual-runbook","operator":"local-tester"}' \
+  http://127.0.0.1:3001/api/nyec/campaigns/101/dispatches
+```
+
+After the dispatch call, inspect:
+
+```bash
+curl http://127.0.0.1:3001/api/nyec/dispatches
+curl http://127.0.0.1:3001/api/nyec/outbound-messages?campaignId=101
+```
+
+### 7. Simulate a Twilio status callback
+
+Use a Twilio-shaped callback payload:
+
+```bash
+curl -i \
+  -H 'content-type: application/json' \
+  -d '{
+    "MessageSid":"SM_LOCAL_001",
+    "MessageStatus":"delivered",
+    "To":"+15555550101",
+    "From":"+15005550006",
+    "ErrorCode":"",
+    "ErrorMessage":"",
+    "Price":"0.0079",
+    "PriceUnit":"USD"
+  }' \
+  http://127.0.0.1:3001/api/nyec/sms/status
+```
+
+### 8. Simulate STOP and START inbound callbacks
+
+STOP:
+
+```bash
+curl -i \
+  -H 'content-type: application/json' \
+  -d '{
+    "MessageSid":"SM_LOCAL_STOP_001",
+    "From":"+15555550101",
+    "To":"+15005550006",
+    "Body":"STOP"
+  }' \
+  http://127.0.0.1:3001/api/nyec/sms/inbound
+```
+
+START:
+
+```bash
+curl -i \
+  -H 'content-type: application/json' \
+  -d '{
+    "MessageSid":"SM_LOCAL_START_001",
+    "From":"+15555550101",
+    "To":"+15005550006",
+    "Body":"START"
+  }' \
+  http://127.0.0.1:3001/api/nyec/sms/inbound
+```
+
+Then inspect opt-out state:
+
+```bash
+curl http://127.0.0.1:3001/api/nyec/opt-outs
+```
+
+### 9. Inspect audit, billing, dispatch, and persistence evidence
+
+Primary evidence endpoints:
+
+```bash
+curl http://127.0.0.1:3001/api/nyec/dispatches
+curl http://127.0.0.1:3001/api/nyec/audit/events
+curl http://127.0.0.1:3001/api/nyec/billing/summary
+curl http://127.0.0.1:3001/api/nyec/dashboard
+```
+
+Local persistence evidence:
+
+```text
+local-api/data/state.json
+```
+
+The key checks are:
+
+- dispatch batch exists for the manual run
+- outbound message status transitions were recorded
+- STOP produced an opt-out event
+- START produced a re-subscribe event
+- billing summary reflects billable and delivered messages
+- audit log includes configuration, dispatch, callback, and opt-out entries
+
+### 10. Reset local data
+
+Preferred API path for operational testing:
+
+```bash
+curl -i -X POST http://127.0.0.1:3001/api/nyec/admin/reset
+```
+
+If the reset endpoint is not implemented on your branch yet, stop the API,
+delete `local-api/data/state.json`, and restart:
+
+```bash
+rm -f local-api/data/state.json
+cd local-api
 npm run dev
 ```
 
-By default the UI attempts to call `/api/*`. If the configured API is unavailable, it falls back to deterministic mock data so the UI can be reviewed immediately.
+## API Contract
 
-## Quick Start: IRIS Skeleton
+The operational laptop API contract lives in [api/openapi.yaml](api/openapi.yaml).
+It documents both the current local Node routes and the additional endpoints the
+Node/Vue workflow expects for full MEF import, manual dispatch, outbound
+message, opt-out, audit, billing, and reset testing.
 
-The included ObjectScript classes are intended as a clean build foundation. They define persistent classes, REST routes, service contracts, seed data, and starter tests.
+## Validation Checklist
 
-A typical IRIS deployment path is:
-
-```bash
-# from repository root
-docker compose up --build
-```
-
-Then compile/import the ObjectScript classes into the `HSOUTREACH` and `HSREGISTRY` namespaces using your preferred IRIS workflow. The Dockerfile includes comments for common import approaches.
-
-## MVP Build Order
-
-1. Compile persistent classes.
-2. Implement table-level security and roles.
-3. Compile REST API dispatch class.
-4. Seed development data.
-5. Connect Vue UI to IRIS APIs.
-6. Implement MEF file parsing and validation.
-7. Implement Twilio provider interface.
-8. Implement scheduler and daily batch selection.
-9. Add audit and billing usage events.
-10. Run simulator and unit tests before live Twilio mode.
+Use [docs/testing/local-operational-checklist.md](docs/testing/local-operational-checklist.md)
+when running the laptop workflow. Treat UI-only review and operational API
+validation as separate checks.
 
 ## Important Security Defaults
 
-- No UI screen should query base tables directly.
-- Every UI action should map to a service method.
-- Twilio secrets should be stored by reference, not as plaintext in application tables.
-- SMS content should avoid PHI.
-- MEF data is versioned by batch and never updated in place.
-- Every cost-generating or patient-affecting action writes audit and usage events.
+- Use Twilio test credentials only for local laptop work.
+- Do not commit real `.env` files, live phone numbers, or member data.
+- SMS bodies should avoid PHI.
+- Every cost-generating or patient-affecting action should emit audit evidence.
+- Treat `local-api/data/state.json` as local-only testing data.
 
 ## Status
 
-This is a starter implementation package for coding agents. It is intentionally scaffolded but complete enough to start building and testing the operational workflow.
+This branch is centered on the local operational testing workflow. The owned
+docs and API contract describe the target Node/Vue laptop path even where some
+endpoint wiring is still being completed in `local-api/` and `vue-ui/`.

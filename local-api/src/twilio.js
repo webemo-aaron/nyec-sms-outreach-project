@@ -52,39 +52,48 @@ async function defaultTransport(request) {
 }
 
 export function createTwilioClient(config, transport = defaultTransport) {
+  async function sendMessage(payload) {
+    const form = {
+      To: payload.to,
+      Body: payload.body ?? 'NYeC outreach message',
+      StatusCallback: buildStatusCallback(config.callbackBaseUrl)
+    }
+
+    if (config.messagingServiceSid) form.MessagingServiceSid = config.messagingServiceSid
+    else form.From = config.fromNumber
+
+    const request = {
+      method: 'POST',
+      url: `https://api.twilio.com/2010-04-01/Accounts/${config.accountSid}/Messages.json`,
+      headers: {
+        authorization: `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString('base64')}`
+      },
+      form
+    }
+
+    const response = await transport(request)
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      const message = response.body?.message ?? `Twilio returned HTTP ${response.statusCode}`
+      const error = new Error(message)
+      error.code = 'TWILIO_REQUEST_FAILED'
+      error.statusCode = response.statusCode
+      throw error
+    }
+
+    return {
+      sid: response.body.sid,
+      status: response.body.status ?? 'queued'
+    }
+  }
+
   return {
     async sendTestSms(payload) {
-      const form = {
-        To: payload.to,
-        Body: payload.body ?? 'NYeC outreach test message',
-        StatusCallback: buildStatusCallback(config.callbackBaseUrl)
-      }
-
-      if (config.messagingServiceSid) form.MessagingServiceSid = config.messagingServiceSid
-      else form.From = config.fromNumber
-
-      const request = {
-        method: 'POST',
-        url: `https://api.twilio.com/2010-04-01/Accounts/${config.accountSid}/Messages.json`,
-        headers: {
-          authorization: `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString('base64')}`
-        },
-        form
-      }
-
-      const response = await transport(request)
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        const message = response.body?.message ?? `Twilio returned HTTP ${response.statusCode}`
-        const error = new Error(message)
-        error.code = 'TWILIO_REQUEST_FAILED'
-        error.statusCode = response.statusCode
-        throw error
-      }
-
-      return {
-        sid: response.body.sid,
-        status: response.body.status ?? 'queued'
-      }
+      return sendMessage({
+        to: payload.to,
+        body: payload.body ?? 'NYeC outreach test message'
+      })
     }
+    ,
+    sendMessage
   }
 }

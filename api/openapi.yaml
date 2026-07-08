@@ -1,119 +1,1097 @@
 openapi: 3.0.3
 info:
-  title: NYeC SMS Outreach Manager API
-  version: 0.1.0
+  title: NYeC SMS Outreach Manager Local Operational API
+  version: 0.2.0
+  description: >
+    Laptop-oriented Node/Vue API contract for the NYeC SMS outreach operational
+    workflow. As of July 8, 2026, the local Node API already serves dashboard,
+    campaign list/create, Twilio config/test, billing, audit, and callback
+    routes. This contract also documents the expected operational endpoints for
+    MEF import, manual dispatch, outbound message inspection, opt-out review,
+    and local reset so the backend and UI can converge on one runbook.
 servers:
+  - url: http://127.0.0.1:3001/api/nyec
+    description: Local Node API
   - url: /api/nyec
+    description: Relative base path
+tags:
+  - name: Health
+  - name: Dashboard
+  - name: Twilio
+  - name: MEF
+  - name: Campaigns
+  - name: Dispatch
+  - name: Messages
+  - name: Opt Outs
+  - name: Audit
+  - name: Billing
+  - name: Admin
 paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: API health check
+      operationId: healthCheck
+      servers:
+        - url: http://127.0.0.1:3001
+        - url: /
+      responses:
+        '200':
+          description: Service health
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthEnvelope'
   /dashboard:
     get:
-      summary: Command Center metrics
+      tags: [Dashboard]
+      summary: Read command-center metrics
+      operationId: getDashboard
       responses:
-        '200': { description: Dashboard payload }
+        '200':
+          description: Dashboard payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardEnvelope'
   /mef/batches:
     get:
-      summary: List MEF imports
+      tags: [MEF]
+      summary: List imported MEF batches
+      operationId: listMefBatches
       responses:
-        '200': { description: MEF import history }
+        '200':
+          description: MEF import history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MefBatchListEnvelope'
     post:
-      summary: Register/import a MEF batch
+      tags: [MEF]
+      summary: Import a synthetic or local-test MEF batch
+      operationId: importMefBatch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MefBatchImportRequest'
       responses:
-        '200': { description: Import summary }
+        '201':
+          description: Imported MEF batch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MefBatchEnvelope'
+        '400':
+          description: Invalid MEF payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /mef/batches/{id}:
     get:
+      tags: [MEF]
       summary: Get MEF batch detail
+      operationId: getMefBatch
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
+        - $ref: '#/components/parameters/IdPath'
       responses:
-        '200': { description: MEF batch detail }
+        '200':
+          description: MEF batch detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MefBatchEnvelope'
+        '404':
+          description: Unknown batch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /campaigns:
     get:
-      summary: List outreach campaigns
+      tags: [Campaigns]
+      summary: List campaigns
+      operationId: listCampaigns
       responses:
-        '200': { description: Campaign list }
+        '200':
+          description: Campaign list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignListEnvelope'
     post:
-      summary: Create outreach campaign
+      tags: [Campaigns]
+      summary: Create a campaign from an imported MEF cohort
+      operationId: createCampaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignCreateRequest'
       responses:
-        '200': { description: Created campaign }
+        '201':
+          description: Created campaign
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignEnvelope'
+        '400':
+          description: Invalid campaign request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /campaigns/{id}:
     get:
+      tags: [Campaigns]
       summary: Get campaign detail
+      operationId: getCampaign
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
+        - $ref: '#/components/parameters/IdPath'
       responses:
-        '200': { description: Campaign detail }
+        '200':
+          description: Campaign detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignEnvelope'
+        '404':
+          description: Unknown campaign
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /campaigns/{id}/launch:
     post:
-      summary: Launch campaign
+      tags: [Campaigns]
+      summary: Mark a draft or scheduled campaign ready to run
+      operationId: launchCampaign
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
+        - $ref: '#/components/parameters/IdPath'
       responses:
-        '200': { description: Launch result }
+        '200':
+          description: Campaign launch result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignEnvelope'
   /campaigns/{id}/pause:
     post:
-      summary: Pause campaign
+      tags: [Campaigns]
+      summary: Pause an active campaign
+      operationId: pauseCampaign
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
+        - $ref: '#/components/parameters/IdPath'
       responses:
-        '200': { description: Pause result }
-  /campaigns/{id}/batches:
-    get:
-      summary: List dispatch batches for campaign
+        '200':
+          description: Campaign pause result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignEnvelope'
+  /campaigns/{id}/dispatches:
+    post:
+      tags: [Dispatch]
+      summary: Run a manual dispatch for a campaign
+      description: >
+        Used by laptop operators to trigger one dispatch batch immediately
+        without waiting for the scheduler window.
+      operationId: runManualDispatch
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualDispatchRequest'
       responses:
-        '200': { description: Batch list }
+        '200':
+          description: Manual dispatch result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DispatchEnvelope'
   /dispatches:
     get:
-      summary: List dispatches
+      tags: [Dispatch]
+      summary: List dispatch batches
+      operationId: listDispatches
+      parameters:
+        - in: query
+          name: campaignId
+          schema:
+            type: string
+          description: Filter dispatches to one campaign
       responses:
-        '200': { description: Dispatch list }
+        '200':
+          description: Dispatch batch list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DispatchListEnvelope'
+  /dispatches/{id}:
+    get:
+      tags: [Dispatch]
+      summary: Get dispatch batch detail
+      operationId: getDispatch
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Dispatch detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DispatchEnvelope'
+        '404':
+          description: Unknown dispatch batch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /outbound-messages:
+    get:
+      tags: [Messages]
+      summary: List outbound messages
+      operationId: listOutboundMessages
+      parameters:
+        - in: query
+          name: campaignId
+          schema:
+            type: string
+        - in: query
+          name: dispatchId
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Outbound message list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboundMessageListEnvelope'
+  /outbound-messages/{id}:
+    get:
+      tags: [Messages]
+      summary: Get outbound message detail
+      operationId: getOutboundMessage
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Outbound message detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboundMessageEnvelope'
+        '404':
+          description: Unknown outbound message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /twilio/config:
     get:
-      summary: Read Twilio config
+      tags: [Twilio]
+      summary: Read masked Twilio configuration
+      operationId: getTwilioConfig
       responses:
-        '200': { description: Twilio configuration }
+        '200':
+          description: Twilio configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TwilioConfigEnvelope'
     put:
-      summary: Update Twilio config
+      tags: [Twilio]
+      summary: Save Twilio configuration
+      operationId: saveTwilioConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TwilioConfigUpdateRequest'
       responses:
-        '200': { description: Save result }
+        '200':
+          description: Saved Twilio configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TwilioConfigSaveEnvelope'
   /twilio/test:
     post:
-      summary: Send Twilio test SMS
+      tags: [Twilio]
+      summary: Send a Twilio test SMS
+      operationId: sendTwilioTestSms
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TwilioTestRequest'
       responses:
-        '200': { description: Test result }
+        '200':
+          description: Twilio test result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TwilioTestEnvelope'
+        '400':
+          description: Missing Twilio credentials or invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /sms/status:
     post:
-      summary: Twilio status callback
+      tags: [Twilio]
+      summary: Accept a Twilio outbound status callback
+      operationId: receiveStatusCallback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusCallbackRequest'
       responses:
-        '200': { description: Callback accepted }
+        '200':
+          description: Callback accepted and audited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEventEnvelope'
   /sms/inbound:
     post:
-      summary: Twilio inbound message callback for STOP/START
+      tags: [Twilio, Opt Outs]
+      summary: Accept an inbound SMS callback, including STOP and START
+      operationId: receiveInboundCallback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InboundCallbackRequest'
       responses:
-        '200': { description: Callback accepted }
+        '200':
+          description: Callback accepted and audited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEventEnvelope'
+  /opt-outs:
+    get:
+      tags: [Opt Outs]
+      summary: List current opt-out state
+      operationId: listOptOuts
+      responses:
+        '200':
+          description: Opt-out state list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptOutListEnvelope'
   /billing/summary:
     get:
-      summary: Billing summary
+      tags: [Billing]
+      summary: Read current billing summary
+      operationId: getBillingSummary
       responses:
-        '200': { description: Billing payload }
+        '200':
+          description: Billing summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingEnvelope'
   /audit/events:
     get:
-      summary: Audit events
+      tags: [Audit]
+      summary: List audit events in reverse chronological order
+      operationId: listAuditEvents
+      parameters:
+        - in: query
+          name: eventType
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
       responses:
-        '200': { description: Audit event list }
+        '200':
+          description: Audit event list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEventListEnvelope'
+  /admin/reset:
+    post:
+      tags: [Admin]
+      summary: Reset local testing state
+      description: >
+        Local-only endpoint that clears persisted MEF, campaign, dispatch,
+        outbound message, billing, opt-out, and audit state for a fresh laptop
+        run.
+      operationId: resetLocalState
+      responses:
+        '200':
+          description: Local state reset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetEnvelope'
+components:
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    HealthEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [status, service]
+          properties:
+            status:
+              type: string
+              example: ok
+            service:
+              type: string
+              example: nyec-local-api
+    ErrorEnvelope:
+      type: object
+      required: [ok, error]
+      properties:
+        ok:
+          type: boolean
+          enum: [false]
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              example: BAD_REQUEST
+            message:
+              type: string
+              example: Invalid request
+    DashboardEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          $ref: '#/components/schemas/Dashboard'
+    Dashboard:
+      type: object
+      required:
+        - activeCampaigns
+        - messagesSentToday
+        - deliveredToday
+        - failedToday
+        - retryPending
+        - optOutsToday
+        - dailyLimit
+        - dailyProgress
+        - estimatedCostToday
+        - twilioStatus
+        - nextSchedulerRun
+        - campaigns
+      properties:
+        activeCampaigns:
+          type: integer
+        messagesSentToday:
+          type: integer
+        deliveredToday:
+          type: integer
+        failedToday:
+          type: integer
+        retryPending:
+          type: integer
+        optOutsToday:
+          type: integer
+        dailyLimit:
+          type: integer
+        dailyProgress:
+          type: number
+        estimatedCostToday:
+          type: number
+        twilioStatus:
+          type: string
+        nextSchedulerRun:
+          type: string
+        campaigns:
+          type: array
+          items:
+            $ref: '#/components/schemas/DashboardCampaign'
+    DashboardCampaign:
+      type: object
+      required: [id, name, status, facility, sent, remaining]
+      properties:
+        id:
+          oneOf:
+            - type: integer
+            - type: string
+        name:
+          type: string
+        status:
+          type: string
+        facility:
+          type: string
+        sent:
+          type: integer
+        remaining:
+          type: integer
+    MefBatchListEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MefBatch'
+    MefBatchEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          $ref: '#/components/schemas/MefBatch'
+    MefBatch:
+      type: object
+      required:
+        - id
+        - fileName
+        - mefVersion
+        - status
+        - totalRows
+        - validRows
+        - rejectedRows
+        - createdAt
+      properties:
+        id:
+          oneOf:
+            - type: integer
+            - type: string
+        fileName:
+          type: string
+        mefVersion:
+          type: string
+        source:
+          type: string
+        status:
+          type: string
+          example: IMPORTED
+        totalRows:
+          type: integer
+        validRows:
+          type: integer
+        rejectedRows:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+    MefBatchImportRequest:
+      type: object
+      required: [fileName, mefVersion, csv]
+      properties:
+        fileName:
+          type: string
+        mefVersion:
+          type: string
+        source:
+          type: string
+          example: laptop-test
+        csv:
+          type: string
+          description: Raw CSV content for synthetic local testing
+    CampaignListEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Campaign'
+    CampaignEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          $ref: '#/components/schemas/Campaign'
+    Campaign:
+      type: object
+      required: [id, name, status, facility, npiLocation, dailyLimit, sent, remaining]
+      properties:
+        id:
+          oneOf:
+            - type: integer
+            - type: string
+        name:
+          type: string
+        customerName:
+          type: string
+        facility:
+          type: string
+        npiLocation:
+          type: string
+        mefBatchId:
+          oneOf:
+            - type: integer
+            - type: string
+        dailyLimit:
+          type: integer
+        sent:
+          type: integer
+        remaining:
+          type: integer
+        status:
+          type: string
+          enum: [DRAFT, SCHEDULED, RUNNING, PAUSED, COMPLETE]
+        startDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+          example: '09:00'
+        externalSurveyBaseUrl:
+          type: string
+        smsBody:
+          type: string
+    CampaignCreateRequest:
+      type: object
+      required: [name, facility, npiLocation, mefBatchId, dailyLimit, smsBody]
+      properties:
+        name:
+          type: string
+        customerName:
+          type: string
+        facility:
+          type: string
+        npiLocation:
+          type: string
+        mefBatchId:
+          oneOf:
+            - type: integer
+            - type: string
+        dailyLimit:
+          type: integer
+          minimum: 1
+        estimatedRecipients:
+          type: integer
+          minimum: 0
+        startDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+        externalSurveyBaseUrl:
+          type: string
+        smsBody:
+          type: string
+    DispatchListEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DispatchBatch'
+    DispatchEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          $ref: '#/components/schemas/DispatchBatch'
+    DispatchBatch:
+      type: object
+      required: [id, campaign, date, selected, sent, delivered, failed, status]
+      properties:
+        id:
+          type: string
+        campaign:
+          type: string
+        campaignId:
+          oneOf:
+            - type: integer
+            - type: string
+        date:
+          type: string
+        selected:
+          type: integer
+        sent:
+          type: integer
+        delivered:
+          type: integer
+        failed:
+          type: integer
+        status:
+          type: string
+          enum: [QUEUED, SENDING, COMPLETE, FAILED]
+        trigger:
+          type: string
+          example: manual-runbook
+        createdAt:
+          type: string
+          format: date-time
+    ManualDispatchRequest:
+      type: object
+      required: [limit, trigger]
+      properties:
+        limit:
+          type: integer
+          minimum: 1
+        trigger:
+          type: string
+          example: manual-runbook
+        operator:
+          type: string
+          example: local-tester
+    OutboundMessageListEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutboundMessage'
+    OutboundMessageEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          $ref: '#/components/schemas/OutboundMessage'
+    OutboundMessage:
+      type: object
+      required: [id, campaignId, dispatchId, to, status, body]
+      properties:
+        id:
+          type: string
+        campaignId:
+          oneOf:
+            - type: integer
+            - type: string
+        dispatchId:
+          type: string
+        to:
+          type: string
+        from:
+          type: string
+        status:
+          type: string
+          enum: [QUEUED, SENT, DELIVERED, FAILED, OPTED_OUT]
+        provider:
+          type: string
+          example: Twilio
+        providerMessageSid:
+          type: string
+        body:
+          type: string
+        cost:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+    TwilioConfigEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          $ref: '#/components/schemas/TwilioConfig'
+    TwilioConfig:
+      type: object
+      required:
+        - mode
+        - accountSid
+        - messagingServiceSid
+        - callbackBaseUrl
+        - sendWindowStart
+        - sendWindowEnd
+        - maxRetryAttempts
+        - status
+      properties:
+        mode:
+          type: string
+          enum: [TEST, LIVE]
+        accountSid:
+          type: string
+          description: Masked value only
+        messagingServiceSid:
+          type: string
+          description: Masked value only
+        fromNumber:
+          type: string
+          description: Optional when messaging service is used
+        callbackBaseUrl:
+          type: string
+        sendWindowStart:
+          type: string
+          example: '09:00'
+        sendWindowEnd:
+          type: string
+          example: '17:00'
+        maxRetryAttempts:
+          type: integer
+        status:
+          type: string
+    TwilioConfigUpdateRequest:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [TEST, LIVE]
+        accountSid:
+          type: string
+        authToken:
+          type: string
+          writeOnly: true
+        messagingServiceSid:
+          type: string
+        fromNumber:
+          type: string
+        callbackBaseUrl:
+          type: string
+        sendWindowStart:
+          type: string
+        sendWindowEnd:
+          type: string
+        maxRetryAttempts:
+          type: integer
+    TwilioConfigSaveEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [status, mode]
+          properties:
+            status:
+              type: string
+              example: saved
+            mode:
+              type: string
+              enum: [TEST, LIVE]
+    TwilioTestRequest:
+      type: object
+      required: [to, body]
+      properties:
+        to:
+          type: string
+          example: '+15005550006'
+        body:
+          type: string
+    TwilioTestEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [status, provider, to]
+          properties:
+            sid:
+              type: string
+            status:
+              type: string
+              example: queued
+            provider:
+              type: string
+              example: Twilio
+            to:
+              type: string
+    StatusCallbackRequest:
+      type: object
+      required: [MessageSid, MessageStatus, To]
+      properties:
+        MessageSid:
+          type: string
+        MessageStatus:
+          type: string
+          example: delivered
+        To:
+          type: string
+        From:
+          type: string
+        ErrorCode:
+          type: string
+        ErrorMessage:
+          type: string
+        Price:
+          type: string
+        PriceUnit:
+          type: string
+    InboundCallbackRequest:
+      type: object
+      required: [MessageSid, From, To, Body]
+      properties:
+        MessageSid:
+          type: string
+        From:
+          type: string
+        To:
+          type: string
+        Body:
+          type: string
+          example: STOP
+    OptOutListEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OptOutRecord'
+    OptOutRecord:
+      type: object
+      required: [phone, status, source, updatedAt]
+      properties:
+        phone:
+          type: string
+        status:
+          type: string
+          enum: [OPTED_OUT, SUBSCRIBED]
+        source:
+          type: string
+          example: TwilioInbound
+        updatedAt:
+          type: string
+          format: date-time
+    BillingEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          $ref: '#/components/schemas/BillingSummary'
+    BillingSummary:
+      type: object
+      required:
+        - period
+        - billableMessages
+        - deliveredMessages
+        - twilioCost
+        - platformFee
+        - estimatedInvoice
+        - grossMargin
+      properties:
+        period:
+          type: string
+        billableMessages:
+          type: integer
+        deliveredMessages:
+          type: integer
+        twilioCost:
+          type: number
+        platformFee:
+          type: number
+        estimatedInvoice:
+          type: number
+        grossMargin:
+          type: number
+    AuditEventListEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+    AuditEventEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          $ref: '#/components/schemas/AuditEvent'
+    AuditEvent:
+      type: object
+      required: [id, eventType, payload, createdAt]
+      properties:
+        id:
+          oneOf:
+            - type: integer
+            - type: string
+        eventType:
+          type: string
+          example: TWILIO_STATUS_CALLBACK
+        payload:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+    ResetEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [status]
+          properties:
+            status:
+              type: string
+              example: reset

@@ -1,15 +1,39 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { api, mockDashboard } from '../api/client'
+import { api, demoDashboard, facilityName, type DashboardSummary } from '../api/client'
 
-const data = ref(mockDashboard)
-onMounted(async () => { data.value = await api.dashboard() as typeof mockDashboard })
+const data = ref<DashboardSummary>(demoDashboard)
+const source = ref<'live' | 'demo'>('live')
+const loadError = ref('')
+
+async function loadDashboard() {
+  try {
+    data.value = await api.getDashboard()
+    source.value = 'live'
+    loadError.value = ''
+  } catch (error) {
+    data.value = demoDashboard
+    source.value = 'demo'
+    loadError.value = error instanceof Error ? error.message : 'Unable to load dashboard metrics.'
+  }
+}
+
+onMounted(loadDashboard)
 </script>
 
 <template>
   <section class="page-title">
     <h1>Operations Command Center</h1>
-    <p>Live control view for MEF-based SMS outreach execution, delivery, failures, retries, cost, and scheduler health.</p>
+    <p>High-level operational snapshot for campaign, Twilio, and dispatch testing.</p>
+  </section>
+
+  <section class="section">
+    <div v-if="source === 'live'" class="surface-note good">
+      <p>Dashboard metrics are loading from the Node API.</p>
+    </div>
+    <div v-else class="surface-note warn">
+      <p>Showing seeded dashboard metrics because the dashboard API load failed: {{ loadError }}</p>
+    </div>
   </section>
 
   <section class="grid cols-4 section">
@@ -22,11 +46,11 @@ onMounted(async () => { data.value = await api.dashboard() as typeof mockDashboa
   <section class="grid cols-2 section">
     <div class="card">
       <h2>Daily Execution Progress</h2>
-      <div class="progress"><span :style="{ width: data.dailyProgress + '%' }"></span></div>
+      <div class="progress"><span :style="{ width: `${data.dailyProgress}%` }"></span></div>
       <p class="metric-label">{{ data.messagesSentToday }} of {{ data.dailyLimit }} planned messages sent. Next scheduler: {{ data.nextSchedulerRun }}.</p>
       <div class="actions">
-        <button class="btn">Pause All</button>
-        <button class="btn secondary">View Failures</button>
+        <RouterLink class="btn" to="/campaigns">Manage Campaigns</RouterLink>
+        <RouterLink class="btn secondary" to="/dispatches">View Dispatches</RouterLink>
       </div>
     </div>
     <div class="card">
@@ -39,6 +63,9 @@ onMounted(async () => { data.value = await api.dashboard() as typeof mockDashboa
           <tr><td>Opt-Outs</td><td>{{ data.optOutsToday }}</td></tr>
         </tbody>
       </table>
+      <div class="actions section">
+        <RouterLink class="btn secondary" to="/twilio">Twilio Settings</RouterLink>
+      </div>
     </div>
   </section>
 
@@ -48,7 +75,11 @@ onMounted(async () => { data.value = await api.dashboard() as typeof mockDashboa
       <thead><tr><th>Campaign</th><th>Status</th><th>Facility</th><th>Sent</th><th>Remaining</th></tr></thead>
       <tbody>
         <tr v-for="campaign in data.campaigns" :key="campaign.id">
-          <td>{{ campaign.name }}</td><td><span class="badge good">{{ campaign.status }}</span></td><td>{{ campaign.facility }}</td><td>{{ campaign.sent }}</td><td>{{ campaign.remaining }}</td>
+          <td>{{ campaign.name }}</td>
+          <td><span class="badge good">{{ campaign.status }}</span></td>
+          <td>{{ facilityName(campaign) }}</td>
+          <td>{{ campaign.sent }}</td>
+          <td>{{ campaign.remaining }}</td>
         </tr>
       </tbody>
     </table>

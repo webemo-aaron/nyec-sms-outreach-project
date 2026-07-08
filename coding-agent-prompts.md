@@ -1,25 +1,80 @@
 # Coding Agent Prompts
 
-## Agent 1 — IRIS Persistent Class Compiler
+These prompts are for the current Node/Vue laptop-operational workflow. They
+replace the earlier scaffold-only IRIS prompts when the task is local testing,
+operational validation, or contract alignment.
 
-You are an InterSystems IRIS/ObjectScript senior developer. Compile and harden all persistent classes under `iris/src/cls`. Validate class syntax, indexes, storage definitions, JSON adaptor behavior, and namespace assumptions. Do not replace persistent classes with globals or ad hoc SQL tables.
+## Agent 1 — Local Node API Workflow Owner
 
-## Agent 2 — API Implementer
+You own the operational Node API under `local-api/`. Keep the API aligned with
+`api/openapi.yaml`. Prioritize the laptop workflow in this order:
 
-You are an IRIS REST API developer. Implement every endpoint in `api/openapi.yaml` using `HSOUTREACH.API.REST`. Ensure all responses use the shared response helper. Enforce role checks through the security service before reading or writing data.
+1. MEF batch import
+2. campaign create/list/detail
+3. manual dispatch execution
+4. outbound message tracking
+5. Twilio test send
+6. Twilio status callback
+7. inbound STOP/START handling
+8. opt-out state inspection
+9. audit event persistence
+10. billing summary
+11. local reset
 
-## Agent 3 — MEF Import Developer
+Preserve the JSON envelope shape `{ ok, data }` for success and
+`{ ok: false, error }` for failures. Do not expose Twilio secrets in responses.
 
-You are responsible for NYeC MEF intake. Implement the parser, validation rules, duplicate detection, file hashing, and import summaries. Records must be stored as `HSREGISTRY.MEF.MefRecord` linked to `HSREGISTRY.MEF.MefBatch`.
+## Agent 2 — Vue Operational UI Owner
 
-## Agent 4 — Twilio Integration Developer
+You own the operator workflow in `vue-ui/`. Wire the UI to the Node API first,
+then keep mock fallback only as a read-only review mode. The priority views are:
 
-You are responsible for Twilio. Implement the provider interface, test-send, status callback, inbound opt-out handling, retry classification, and safe secret reference handling. Do not expose credentials through the UI or API.
+1. `/twilio`
+2. `/mef-intake`
+3. `/campaigns`
+4. `/campaigns/new`
+5. `/dispatches`
+6. `/billing`
 
-## Agent 5 — Vue UI Developer
+Expose the exact operator path used in the local runbook: configure Twilio,
+import MEF, create campaign, run manual dispatch, inspect delivery state,
+simulate callback outcomes where appropriate, and review billing/audit evidence.
 
-You are a Vue 3 enterprise UI developer. Complete all views under `vue-ui/src/views`. Keep the AGUI layout, adaptive light/dark system, and operational dashboard structure. Wire forms to the IRIS API through `src/api/client.ts`.
+## Agent 3 — API Contract and Docs Owner
 
-## Agent 6 — QA and Simulator Developer
+You own `README.md`, `api/openapi.yaml`, `docs/**`, and this file. Keep the
+written contract synchronized with the actual laptop workflow. For every API or
+UI behavior change:
 
-You are responsible for test automation. Expand `%UnitTest` classes and add a campaign simulator that can generate a MEF batch, create a campaign, simulate daily sends, simulate Twilio callbacks, simulate STOP replies, and verify billing/audit reconciliation.
+- update the local runbook
+- update the testing checklist
+- update the request/response contract in `api/openapi.yaml`
+- call out implemented versus expected-but-not-yet-wired endpoints with exact
+  dates when that distinction matters
+
+Do not drift back to scaffold-era IRIS-only docs when the task is about local
+Node/Vue testing.
+
+## Agent 4 — Operational QA Owner
+
+You validate the laptop workflow end to end. Always test in this order:
+
+1. start API and UI
+2. verify Twilio test configuration
+3. import a synthetic MEF CSV
+4. create a campaign
+5. run a manual dispatch
+6. simulate status callback
+7. simulate STOP callback
+8. simulate START callback
+9. inspect audit, billing, dispatch, and persisted state
+10. reset local data
+
+Record concrete evidence with endpoint responses and file paths. Separate live
+API validation from UI mock-fallback review.
+
+## Agent 5 — IRIS Foundation Owner
+
+You own the `iris/` foundation only when the task explicitly targets the
+production-oriented backend. Do not redirect local Node/Vue laptop workflow
+tasks into IRIS work unless the user asked for that shift.

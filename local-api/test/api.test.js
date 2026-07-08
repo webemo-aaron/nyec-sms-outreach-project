@@ -1,39 +1,8 @@
 import assert from 'node:assert/strict'
-import { Readable, Writable } from 'node:stream'
 import { describe, it } from 'node:test'
 
 import { createApp } from '../src/server.js'
-
-async function request(app, path, options = {}) {
-  const body = options.body ?? ''
-  const requestStream = Readable.from(body ? [Buffer.from(body)] : [])
-  requestStream.method = options.method ?? 'GET'
-  requestStream.url = path
-  requestStream.headers = {
-    host: 'localhost',
-    'content-type': 'application/json',
-    ...(options.headers ?? {})
-  }
-
-  let statusCode = 0
-  let responseBody = ''
-  const responseStream = new Writable({
-    write(chunk, _encoding, callback) {
-      responseBody += chunk.toString('utf8')
-      callback()
-    }
-  })
-  responseStream.writeHead = (code) => {
-    statusCode = code
-  }
-
-  await app(requestStream, responseStream)
-
-  return {
-    response: { status: statusCode },
-    json: JSON.parse(responseBody)
-  }
-}
+import { request } from './test-helpers.js'
 
 describe('local API', () => {
   const app = createApp({
@@ -63,6 +32,7 @@ describe('local API', () => {
   it('returns a clear error when Twilio credentials are missing', async () => {
     const { response, json } = await request(app, '/api/nyec/twilio/test', {
       method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ to: '+15005550006', body: 'NYeC test message' })
     })
 
@@ -91,6 +61,7 @@ describe('local API', () => {
 
     const { response, json } = await request(configuredApp, '/api/nyec/twilio/test', {
       method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ to: '+15005550006', body: 'Route test' })
     })
 
@@ -99,5 +70,38 @@ describe('local API', () => {
     assert.equal(json.data.sid, 'SM789')
     assert.equal(json.data.status, 'queued')
     assert.equal(calls[0].form.Body, 'Route test')
+  })
+
+  it('masks Twilio secrets when reading and updating config', async () => {
+    const configurableApp = createApp({
+      env: {
+        NODE_ENV: 'test',
+        TWILIO_MODE: 'TEST'
+      }
+    })
+
+    const updateResponse = await request(configurableApp, '/api/nyec/twilio/config', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'LIVE',
+        accountSid: 'AC1234567890ABCDEF',
+        authToken: 'twilio-secret-token',
+        messagingServiceSid: 'MG1234567890ABCDE',
+        callbackBaseUrl: 'https://example.test/hooks'
+      })
+    })
+
+    assert.equal(updateResponse.response.status, 200)
+    assert.equal(updateResponse.json.ok, true)
+    assert.equal(updateResponse.json.data.accountSid, 'AC12********CDEF')
+    assert.equal(updateResponse.json.data.messagingServiceSid, 'MG12********BCDE')
+    assert.equal(updateResponse.json.data.authToken, 'twil********oken')
+
+    const readResponse = await request(configurableApp, '/api/nyec/twilio/config')
+    assert.equal(readResponse.response.status, 200)
+    assert.equal(readResponse.json.data.mode, 'LIVE')
+    assert.equal(readResponse.json.data.accountSid, 'AC12********CDEF')
+    assert.equal(readResponse.json.data.authToken, 'twil********oken')
   })
 })
