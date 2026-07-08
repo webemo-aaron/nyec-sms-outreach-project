@@ -1,6 +1,6 @@
 import { apiRoutes } from './contracts'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/nyec'
+export const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/nyec'
 
 type ApiEnvelope<T> = {
   ok?: boolean

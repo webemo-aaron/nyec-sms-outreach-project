@@ -12,8 +12,8 @@ export default createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', redirect: '/command-center' },
-    { path: '/command-center', component: CommandCenter },
-    { path: '/mef-intake', component: MefIntake },
+    { path: '/command-center', alias: '/dashboard', component: CommandCenter },
+    { path: '/mef-intake', alias: '/mef', component: MefIntake },
     { path: '/campaigns', component: Campaigns },
     { path: '/campaigns/new', component: CampaignWizard },
     { path: '/twilio', component: TwilioConfig },

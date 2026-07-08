@@ -155,7 +155,7 @@ console.log(JSON.stringify({
 NODE
 
 log "Check UI routes"
-for route in / /twilio /mef /campaigns /dispatches /admin /billing; do
+for route in / /command-center /dashboard /twilio /mef /mef-intake /campaigns /dispatches /admin /billing; do
   status="$(curl -fsS -o /dev/null -w '%{http_code}' "$UI_BASE$route")"
   if [[ "$status" != "200" ]]; then
     printf 'Expected %s%s to return 200, got %s\n' "$UI_BASE" "$route" "$status" >&2

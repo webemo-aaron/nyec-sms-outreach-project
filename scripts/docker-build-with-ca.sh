@@ -48,7 +48,8 @@ docker_build_with_ca() {
 }
 
 printf 'Building local-api with extra CA: %s\n' "$ABS_CERT"
-if ! docker_build_with_ca nyec_sms_outreach_project-local-api:latest ./local-api; then
+if ! docker_build_with_ca nyec_sms_outreach_project-local-api:latest ./local-api \
+  -t local-api:latest; then
   cat >&2 <<'EOF'
 
 API image build failed.
@@ -66,6 +67,7 @@ fi
 
 printf 'Building vue-ui with extra CA: %s\n' "$ABS_CERT"
 if ! docker_build_with_ca nyec_sms_outreach_project-vue-ui:latest ./vue-ui \
+  -t vue-ui:latest \
   --build-arg VITE_API_BASE_URL="${VITE_API_BASE_URL:-http://localhost:3001/api/nyec}"; then
   cat >&2 <<'EOF'
 

@@ -1,5 +1,6 @@
 services:
   local-api:
+    image: nyec_sms_outreach_project-local-api:latest
     build:
       context: ./local-api
     container_name: nyec-sms-outreach-local-api
@@ -38,6 +39,7 @@ services:
       - IRIS_PASSWORD=SYS
 
   vue-ui:
+    image: nyec_sms_outreach_project-vue-ui:latest
     build:
       context: ./vue-ui
       args:

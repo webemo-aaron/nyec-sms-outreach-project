@@ -27,8 +27,14 @@
           <span class="pill">NPI: All</span>
         </div>
         <span class="pill">Theme: OS Adaptive</span>
+        <span class="pill">Operational Vue UI</span>
+        <span class="pill">API: {{ API_BASE }}</span>
       </div>
       <RouterView />
     </main>
   </div>
 </template>
+
+<script setup lang="ts">
+import { API_BASE } from './api/client'
+</script>
