@@ -22,6 +22,7 @@ collecting detailed evidence.
 
 ## Docker Runtime
 
+- [ ] If a script says Docker is unavailable, run `./scripts/docker-env-check.sh`
 - [ ] If Docker build reports a certificate error, run `./scripts/docker-cert-diagnostics.sh`
 - [ ] If Docker pulls pass but npm/build TLS fails, run `./scripts/docker-build-with-ca.sh /path/to/work-root-ca.pem`
 - [ ] If Docker pull itself fails with `x509` or `certificate signed by unknown authority`, fix Docker Desktop or host trust before retrying the repo scripts

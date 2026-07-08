@@ -20,8 +20,8 @@ ABS_CERT="$(cd "$(dirname "$CERT_PATH")" && pwd)/$(basename "$CERT_PATH")"
 
 cd "$ROOT_DIR"
 
-if ! docker version >/dev/null 2>&1; then
-  printf 'Docker is not reachable. Start Docker Desktop or the Docker daemon, then retry.\n' >&2
+if ! "$ROOT_DIR/scripts/docker-env-check.sh"; then
+  printf '\nDocker environment check failed. Resolve the issue above, then retry this command.\n' >&2
   exit 1
 fi
 

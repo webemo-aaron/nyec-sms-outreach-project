@@ -84,6 +84,16 @@ docker compose down
 
 ### Certificate and TLS build failures
 
+If a repo script says Docker is not available, first run:
+
+```bash
+./scripts/docker-env-check.sh
+```
+
+This reports the Docker CLI path, active Docker context, `DOCKER_HOST`, Docker
+socket state, WSL distro list when available, and whether the daemon is
+reachable from the current shell.
+
 If Docker or npm fails with a certificate error on a managed work laptop, run:
 
 ```bash
