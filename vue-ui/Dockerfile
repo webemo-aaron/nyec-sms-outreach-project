@@ -3,6 +3,8 @@ FROM node:20-alpine AS build
 WORKDIR /app
 ARG VITE_API_BASE_URL=http://localhost:3001/api/nyec
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV NODE_ENV=development
+ENV NPM_CONFIG_PRODUCTION=false
 
 RUN --mount=type=secret,id=extra_ca,target=/tmp/extra-ca.crt,required=false \
     set -e; \
@@ -17,7 +19,7 @@ RUN --mount=type=secret,id=extra_ca,target=/tmp/extra-ca.crt,required=false \
     fi
 
 COPY package*.json ./
-RUN npm ci --include=dev
+RUN npm ci --include=dev && test -x node_modules/.bin/vue-tsc
 
 COPY index.html vite.config.ts tsconfig.json ./
 COPY src ./src
