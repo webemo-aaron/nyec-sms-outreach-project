@@ -39,6 +39,23 @@ This runbook is the end-to-end local workflow for July 8, 2026. It covers the
 operator path the Node/Vue stack is expected to support on a laptop, including
 the HTTP callback simulations used during testing.
 
+### Fast validation path
+
+From the repository root, run the canonical local validation script:
+
+```bash
+./scripts/local-operational-validation.sh
+```
+
+The script installs dependencies, runs API tests, runs the Vue contract test and
+production build, starts API/UI services when they are not already running,
+drives a synthetic MEF/campaign/dispatch/callback workflow, checks the expected
+UI routes, reports the optional Twilio test-send result, and resets local state
+at the end.
+
+Use the manual steps below when you need to inspect or repeat one part of the
+workflow by hand.
+
 ### 1. Install and start the local API
 
 ```bash
@@ -147,7 +164,7 @@ curl -i \
   "fileName": "sample-mef.csv",
   "mefVersion": "2026-W28-LOCAL",
   "source": "laptop-test",
-  "csv": "MemberID,FirstName,LastName,DOB,Phone,Facility,NpiLocation,SurveyLink\n10001,Ana,Test,1986-01-15,+15555550101,NYC Health Center A,1234567890,https://survey.example.test/r/10001\n10002,Ben,Test,1979-04-22,+15555550102,NYC Health Center A,1234567890,https://survey.example.test/r/10002\n10003,Cam,Test,1990-09-30,+15555550103,NYC Health Center B,1234567891,https://survey.example.test/r/10003\n"
+  "csvText": "MemberID,FirstName,LastName,DOB,Phone,Facility,NpiLocation,SurveyLink\n10001,Ana,Test,1986-01-15,+15555550101,NYC Health Center A,1234567890,https://survey.example.test/r/10001\n10002,Ben,Test,1979-04-22,+15555550102,NYC Health Center A,1234567890,https://survey.example.test/r/10002\n10003,Cam,Test,1990-09-30,+15555550103,NYC Health Center B,1234567891,https://survey.example.test/r/10003\n"
 }
 EOF
 ```
@@ -160,7 +177,8 @@ curl http://127.0.0.1:3001/api/nyec/mef/batches
 
 ### 5. Create a campaign
 
-Use the UI at `/campaigns/new` or call the API directly:
+Use the UI at `/campaigns/new` or call the API directly. Replace `1` with the
+batch ID returned by the MEF import response.
 
 ```bash
 curl -i \
@@ -170,7 +188,7 @@ curl -i \
     "customerName":"NYC Health Partner",
     "facility":"NYC Health Center A",
     "npiLocation":"1234567890",
-    "mefBatchId":12,
+    "mefBatchId":1,
     "dailyLimit":2,
     "startDate":"2026-07-13",
     "startTime":"09:00",
@@ -189,7 +207,8 @@ curl http://127.0.0.1:3001/api/nyec/campaigns
 ### 6. Run a manual dispatch
 
 The laptop workflow expects a manual dispatch endpoint so operators can test a
-single batch without waiting for the scheduler.
+single batch without waiting for the scheduler. Replace `101` with the campaign
+ID returned by the campaign creation response.
 
 Expected request:
 
@@ -209,13 +228,14 @@ curl http://127.0.0.1:3001/api/nyec/outbound-messages?campaignId=101
 
 ### 7. Simulate a Twilio status callback
 
-Use a Twilio-shaped callback payload:
+Use the generated `sid` from the dispatch response. The status callback must
+target an actual outbound message SID.
 
 ```bash
 curl -i \
   -H 'content-type: application/json' \
   -d '{
-    "MessageSid":"SM_LOCAL_001",
+    "MessageSid":"SIM_GENERATED_FROM_DISPATCH",
     "MessageStatus":"delivered",
     "To":"+15555550101",
     "From":"+15005550006",
@@ -263,6 +283,9 @@ Then inspect opt-out state:
 curl http://127.0.0.1:3001/api/nyec/opt-outs
 ```
 
+After `STOP`, the phone should appear in the active opt-out list. After
+`START`, the active opt-out list should no longer include that phone.
+
 ### 9. Inspect audit, billing, dispatch, and persistence evidence
 
 Primary evidence endpoints:
@@ -294,16 +317,10 @@ The key checks are:
 Preferred API path for operational testing:
 
 ```bash
-curl -i -X POST http://127.0.0.1:3001/api/nyec/admin/reset
-```
-
-If the reset endpoint is not implemented on your branch yet, stop the API,
-delete `local-api/data/state.json`, and restart:
-
-```bash
-rm -f local-api/data/state.json
-cd local-api
-npm run dev
+curl -i \
+  -H 'content-type: application/json' \
+  -d '{}' \
+  http://127.0.0.1:3001/api/nyec/admin/reset
 ```
 
 ## API Contract

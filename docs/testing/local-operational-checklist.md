@@ -5,12 +5,17 @@ repository branch.
 
 ## Preconditions
 
-- [ ] Work only in owned files for this task: `README.md`, `api/openapi.yaml`, `docs/**`, `coding-agent-prompts.md`
-- [ ] Do not modify `local-api/**`
-- [ ] Do not modify `vue-ui/**`
 - [ ] `local-api/.env` contains Twilio test credentials, not live credentials
-- [ ] `local-api` dependencies installed with `npm install`
-- [ ] `vue-ui` dependencies installed with `npm install`
+- [ ] No real member data is present in local CSV payloads or `local-api/data/state.json`
+
+## Canonical Validation
+
+- [ ] From the repository root, run `./scripts/local-operational-validation.sh`
+- [ ] Confirm the script runs API tests, Vue contract tests, Vue production build, synthetic HTTP workflow, UI route checks, optional Twilio test-send check, and final reset
+- [ ] If the optional Twilio test-send reports a credential or network error, record it as an environment-dependent follow-up rather than a local workflow failure
+
+Use the manual sections below when investigating a failed script step or when
+collecting detailed evidence.
 
 ## Startup
 
@@ -40,27 +45,31 @@ MemberID,FirstName,LastName,DOB,Phone,Facility,NpiLocation,SurveyLink
 ```
 
 - [ ] Submit `POST /api/nyec/mef/batches`
+- [ ] Confirm the JSON payload uses `csvText`, not `csv`
 - [ ] Confirm `GET /api/nyec/mef/batches` shows the imported batch
 - [ ] Record the MEF batch ID used for campaign creation
 
 ## Campaign Creation
 
 - [ ] Create a campaign from `/campaigns/new` or `POST /api/nyec/campaigns`
+- [ ] Use the MEF batch ID returned by the import response
 - [ ] Confirm campaign appears in `GET /api/nyec/campaigns`
 - [ ] Verify daily limit, MEF batch, facility, and SMS body values
 
 ## Manual Dispatch
 
 - [ ] Trigger `POST /api/nyec/campaigns/{id}/dispatches`
+- [ ] Use the campaign ID returned by the campaign creation response
 - [ ] Confirm `GET /api/nyec/dispatches` shows a new dispatch batch
 - [ ] Confirm `GET /api/nyec/outbound-messages?campaignId={id}` shows queued or sent messages
 
 ## Callback Simulation
 
-- [ ] POST delivered status payload to `/api/nyec/sms/status`
+- [ ] POST delivered status payload to `/api/nyec/sms/status` using a generated message SID from the dispatch response
 - [ ] POST `STOP` inbound payload to `/api/nyec/sms/inbound`
+- [ ] Confirm `GET /api/nyec/opt-outs` includes the stopped phone
 - [ ] POST `START` inbound payload to `/api/nyec/sms/inbound`
-- [ ] Confirm `GET /api/nyec/opt-outs` reflects stop/start state
+- [ ] Confirm `GET /api/nyec/opt-outs` no longer includes the re-subscribed phone
 
 ## Evidence Review
 
@@ -72,8 +81,8 @@ MemberID,FirstName,LastName,DOB,Phone,Facility,NpiLocation,SurveyLink
 
 ## Reset
 
-- [ ] Prefer `POST /api/nyec/admin/reset`
-- [ ] If reset is not implemented, stop the API, delete `local-api/data/state.json`, restart the API, and confirm the state is cleared
+- [ ] Run `POST /api/nyec/admin/reset` with an empty JSON body: `{}`
+- [ ] Confirm campaigns, MEF batches, dispatches, outbound messages, and active opt-outs are cleared
 
 ## Exit Criteria
 
