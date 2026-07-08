@@ -57,8 +57,9 @@ If the error mentions Docker Hub, registry-1.docker.io, auth.docker.io, DNS, or 
 while pulling node:20-alpine, fix Docker Desktop or host trust first:
   ./scripts/docker-cert-diagnostics.sh
 
-If the error mentions npm, UNABLE_TO_GET_ISSUER_CERT_LOCALLY, or unable to verify
-the first certificate, confirm the CA file is the work root CA in PEM format.
+If the error mentions apk, npm, UNABLE_TO_GET_ISSUER_CERT_LOCALLY, TLS:
+server certificate not trusted, or unable to verify the first certificate,
+confirm the CA file is the work root CA in PEM format.
 EOF
   exit 1
 fi
@@ -74,8 +75,9 @@ If the error mentions Docker Hub, registry-1.docker.io, auth.docker.io, DNS, or 
 while pulling node:20-alpine or nginx:1.27-alpine, fix Docker Desktop or host trust first:
   ./scripts/docker-cert-diagnostics.sh
 
-If the error mentions npm, UNABLE_TO_GET_ISSUER_CERT_LOCALLY, or unable to verify
-the first certificate, confirm the CA file is the work root CA in PEM format.
+If the error mentions apk, npm, UNABLE_TO_GET_ISSUER_CERT_LOCALLY, TLS:
+server certificate not trusted, or unable to verify the first certificate,
+confirm the CA file is the work root CA in PEM format.
 EOF
   exit 1
 fi
