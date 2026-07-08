@@ -40,6 +40,12 @@ wait_for_url() {
 
 cd "$ROOT_DIR"
 
+log "Run Vue UI tests"
+(
+  cd vue-ui
+  npm test
+)
+
 log "Build packaged Docker services"
 docker_cli compose build local-api vue-ui
 

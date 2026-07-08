@@ -23,7 +23,6 @@ const isImporting = ref(false)
 const form = reactive({
   fileName: 'NYeC_MEF_2026_07_13.csv',
   mefVersion: '2026-W29',
-  sourceNamespace: 'hxcommon',
   csvText: ''
 })
 
@@ -73,7 +72,6 @@ async function importBatch() {
     const detail = await api.importMefBatch({
       fileName: form.fileName,
       mefVersion: form.mefVersion,
-      sourceNamespace: form.sourceNamespace,
       csvText: form.csvText
     })
 
@@ -132,11 +130,6 @@ onMounted(loadBatches)
           <label>MEF Version</label>
           <input v-model="form.mefVersion" />
         </div>
-      </div>
-
-      <div class="field">
-        <label>Source Namespace</label>
-        <input v-model="form.sourceNamespace" />
       </div>
 
       <div class="field">

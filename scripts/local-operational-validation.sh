@@ -64,7 +64,7 @@ log "Test and build Vue UI"
   cd "$UI_DIR"
   [[ -f .env ]] || cp .env.example .env
   npm install
-  node --test src/api/contracts.test.mjs
+  npm test
   npm run build
 )
 

@@ -44,7 +44,6 @@ export type MefBatchSummary = {
   id: Identifier
   fileName: string
   mefVersion: string
-  sourceNamespace?: string
   status: string
   totalRows: number
   acceptedRows?: number
@@ -195,7 +194,6 @@ export type CreateCampaignInput = {
 export type ImportMefBatchInput = {
   fileName: string
   mefVersion: string
-  sourceNamespace?: string
   csvText: string
 }
 
@@ -287,7 +285,6 @@ export const demoMefBatches: MefBatchSummary[] = [
     id: 12,
     fileName: 'NYeC_MEF_2026_07_06.csv',
     mefVersion: '2026-W28',
-    sourceNamespace: 'hxcommon',
     status: 'IMPORTED',
     totalRows: 48392,
     acceptedRows: 45110,
