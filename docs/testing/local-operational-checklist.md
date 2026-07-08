@@ -13,9 +13,21 @@ repository branch.
 - [ ] From the repository root, run `./scripts/local-operational-validation.sh`
 - [ ] Confirm the script runs API tests, Vue contract tests, Vue production build, synthetic HTTP workflow, UI route checks, optional Twilio test-send check, and final reset
 - [ ] If the optional Twilio test-send reports a credential or network error, record it as an environment-dependent follow-up rather than a local workflow failure
+- [ ] Run `./scripts/docker-operational-validation.sh`
+- [ ] Confirm Docker validation builds packaged API/UI images, starts Compose services, runs the synthetic HTTP workflow, checks UI routes, and resets Docker API state
+- [ ] Stop Docker services after inspection with `docker compose down`
 
 Use the manual sections below when investigating a failed script step or when
 collecting detailed evidence.
+
+## Docker Runtime
+
+- [ ] Confirm `docker compose build local-api vue-ui` completes
+- [ ] Confirm `docker compose up -d local-api vue-ui` starts both services
+- [ ] Confirm `curl http://127.0.0.1:3001/health` returns `ok`
+- [ ] Confirm `curl http://127.0.0.1:5173/health` returns `ok`
+- [ ] Open `http://127.0.0.1:5173`
+- [ ] Confirm API state persists in Docker volume `nyec_sms_outreach_project_local_api_data`
 
 ## Startup
 

@@ -56,6 +56,32 @@ at the end.
 Use the manual steps below when you need to inspect or repeat one part of the
 workflow by hand.
 
+### Docker validation path
+
+After the local workflow is passing, build and run the packaged Docker services:
+
+```bash
+./scripts/docker-operational-validation.sh
+```
+
+The Docker script builds the API and UI images, starts `local-api` and `vue-ui`
+with `docker compose`, runs the same synthetic operational workflow through the
+containerized API, checks the containerized UI routes, and resets the Docker API
+state. Containers remain running for inspection.
+
+Expected Docker URLs:
+
+```text
+API: http://127.0.0.1:3001
+UI:  http://127.0.0.1:5173
+```
+
+Stop the Docker services when finished:
+
+```bash
+docker compose down
+```
+
 ### 1. Install and start the local API
 
 ```bash
@@ -335,6 +361,24 @@ message, opt-out, audit, billing, and reset testing.
 Use [docs/testing/local-operational-checklist.md](docs/testing/local-operational-checklist.md)
 when running the laptop workflow. Treat UI-only review and operational API
 validation as separate checks.
+
+## Merge to Main
+
+After validating this branch on the work laptop:
+
+```bash
+git switch main
+git pull origin main
+git merge --no-ff operational-testing-workflow
+git push origin main
+```
+
+Then rerun:
+
+```bash
+./scripts/local-operational-validation.sh
+./scripts/docker-operational-validation.sh
+```
 
 ## Important Security Defaults
 
