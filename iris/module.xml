@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="nyec-starter">
+  <Document name="nyec-sms-outreach">
+    <Module>
+      <Name>nyec-sms-outreach</Name>
+      <Version>0.1.0</Version>
+      <Packaging>module</Packaging>
+      <SourcesRoot>src</SourcesRoot>
+      <Resource Name="cls" Directory="src/cls" Recurse="1" />
+    </Module>
+  </Document>
+</Export>

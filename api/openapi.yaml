@@ -1,0 +1,119 @@
+openapi: 3.0.3
+info:
+  title: NYeC SMS Outreach Manager API
+  version: 0.1.0
+servers:
+  - url: /api/nyec
+paths:
+  /dashboard:
+    get:
+      summary: Command Center metrics
+      responses:
+        '200': { description: Dashboard payload }
+  /mef/batches:
+    get:
+      summary: List MEF imports
+      responses:
+        '200': { description: MEF import history }
+    post:
+      summary: Register/import a MEF batch
+      responses:
+        '200': { description: Import summary }
+  /mef/batches/{id}:
+    get:
+      summary: Get MEF batch detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: MEF batch detail }
+  /campaigns:
+    get:
+      summary: List outreach campaigns
+      responses:
+        '200': { description: Campaign list }
+    post:
+      summary: Create outreach campaign
+      responses:
+        '200': { description: Created campaign }
+  /campaigns/{id}:
+    get:
+      summary: Get campaign detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Campaign detail }
+  /campaigns/{id}/launch:
+    post:
+      summary: Launch campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Launch result }
+  /campaigns/{id}/pause:
+    post:
+      summary: Pause campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Pause result }
+  /campaigns/{id}/batches:
+    get:
+      summary: List dispatch batches for campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Batch list }
+  /dispatches:
+    get:
+      summary: List dispatches
+      responses:
+        '200': { description: Dispatch list }
+  /twilio/config:
+    get:
+      summary: Read Twilio config
+      responses:
+        '200': { description: Twilio configuration }
+    put:
+      summary: Update Twilio config
+      responses:
+        '200': { description: Save result }
+  /twilio/test:
+    post:
+      summary: Send Twilio test SMS
+      responses:
+        '200': { description: Test result }
+  /sms/status:
+    post:
+      summary: Twilio status callback
+      responses:
+        '200': { description: Callback accepted }
+  /sms/inbound:
+    post:
+      summary: Twilio inbound message callback for STOP/START
+      responses:
+        '200': { description: Callback accepted }
+  /billing/summary:
+    get:
+      summary: Billing summary
+      responses:
+        '200': { description: Billing payload }
+  /audit/events:
+    get:
+      summary: Audit events
+      responses:
+        '200': { description: Audit event list }

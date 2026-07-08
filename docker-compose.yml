@@ -1,0 +1,45 @@
+services:
+  local-api:
+    image: node:20-alpine
+    container_name: nyec-sms-outreach-local-api
+    working_dir: /app
+    command: sh -c "npm test && npm run start"
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./local-api:/app
+    environment:
+      - PORT=3001
+      - HOST=0.0.0.0
+      - DATA_FILE=/app/data/state.json
+      - TWILIO_MODE=${TWILIO_MODE:-TEST}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_MESSAGING_SERVICE_SID=${TWILIO_MESSAGING_SERVICE_SID:-}
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER:-}
+      - TWILIO_CALLBACK_BASE_URL=${TWILIO_CALLBACK_BASE_URL:-http://localhost:3001}
+
+  iris:
+    build: ./iris
+    container_name: nyec-sms-outreach-iris
+    ports:
+      - "52773:52773"
+      - "1972:1972"
+    volumes:
+      - ./iris/src:/opt/irisbuild/src
+      - ./iris/tests:/opt/irisbuild/tests
+    environment:
+      - IRIS_USERNAME=SuperUser
+      - IRIS_PASSWORD=SYS
+
+  vue-ui:
+    image: node:20-alpine
+    container_name: nyec-sms-outreach-ui
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./vue-ui:/app
+    environment:
+      - VITE_API_BASE_URL=http://localhost:3001/api/nyec
