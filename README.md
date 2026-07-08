@@ -82,6 +82,33 @@ Stop the Docker services when finished:
 docker compose down
 ```
 
+### Certificate and TLS build failures
+
+If Docker or npm fails with a certificate error on a managed work laptop, run:
+
+```bash
+./scripts/docker-cert-diagnostics.sh
+```
+
+Use the result to pick the fix:
+
+- If `docker pull node:20-alpine` or `docker pull nginx:1.27-alpine` fails,
+  add the work root CA to Docker Desktop or the host Docker trust store first.
+- If image pulls pass but the Docker build fails during `npm ci`, build with
+  the work root CA injected into the API/UI images:
+
+```bash
+./scripts/docker-build-with-ca.sh /path/to/work-root-ca.pem
+```
+
+The Dockerfiles support an optional BuildKit secret named `extra_ca`; normal
+builds do not need a certificate file. The CA build script does not commit or
+copy private `.env` files or member data.
+
+- If Docker builds pass but Twilio or another outbound runtime call fails,
+  treat it as runtime network/certificate policy and validate that path
+  separately from the image build.
+
 ### 1. Install and start the local API
 
 ```bash

@@ -4,6 +4,13 @@ WORKDIR /app
 ARG VITE_API_BASE_URL=http://localhost:3001/api/nyec
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
+RUN apk add --no-cache ca-certificates
+RUN --mount=type=secret,id=extra_ca,target=/tmp/extra-ca.crt,required=false \
+    if [ -s /tmp/extra-ca.crt ]; then \
+      cp /tmp/extra-ca.crt /usr/local/share/ca-certificates/work-root-ca.crt; \
+      update-ca-certificates; \
+    fi
+
 COPY package*.json ./
 RUN npm ci
 

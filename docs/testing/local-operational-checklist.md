@@ -22,6 +22,9 @@ collecting detailed evidence.
 
 ## Docker Runtime
 
+- [ ] If Docker build reports a certificate error, run `./scripts/docker-cert-diagnostics.sh`
+- [ ] If Docker pulls pass but npm/build TLS fails, run `./scripts/docker-build-with-ca.sh /path/to/work-root-ca.pem`
+- [ ] If Docker pull itself fails with `x509` or `certificate signed by unknown authority`, fix Docker Desktop or host trust before retrying the repo scripts
 - [ ] Confirm `docker compose build local-api vue-ui` completes
 - [ ] Confirm `docker compose up -d local-api vue-ui` starts both services
 - [ ] Confirm `curl http://127.0.0.1:3001/health` returns `ok`

@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 API_BASE="${API_BASE:-http://127.0.0.1:3001}"
 UI_BASE="${UI_BASE:-http://127.0.0.1:5173}"
+export DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-1}"
 
 log() {
   printf '\n==> %s\n' "$1"
