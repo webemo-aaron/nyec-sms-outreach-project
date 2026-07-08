@@ -132,6 +132,10 @@ describe('operational local workflow', () => {
     assert.equal(secondDispatch.response.status, 200)
     assert.equal(secondDispatch.json.data.selected, 1)
     assert.equal(secondDispatch.json.data.skippedOptOuts, 0)
+
+    const optOutsResponse = await request(app, '/api/nyec/opt-outs')
+    assert.equal(optOutsResponse.response.status, 200)
+    assert.deepEqual(optOutsResponse.json.data, [])
   })
 
   it('updates outbound message status from Twilio callbacks', async () => {

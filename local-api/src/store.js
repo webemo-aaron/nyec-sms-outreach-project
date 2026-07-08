@@ -374,7 +374,7 @@ function campaignDetail(campaign) {
       })))
     },
     optOuts() {
-      return clone(state.optOuts)
+      return clone(state.optOuts.filter((entry) => !entry.removedAt))
     },
     billing() {
       const billableMessages = state.billingUsage
