@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT_DIR/scripts/docker-cli-lib.sh"
 export DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-1}"
 
 log() {
@@ -24,11 +25,11 @@ cd "$ROOT_DIR"
 
 FAILURES=0
 
-run_step "Docker can pull node:20-alpine" docker pull node:20-alpine || FAILURES=$((FAILURES + 1))
-run_step "Docker can pull nginx:1.27-alpine" docker pull nginx:1.27-alpine || FAILURES=$((FAILURES + 1))
+run_step "Docker can pull node:20-alpine" docker_cli pull node:20-alpine || FAILURES=$((FAILURES + 1))
+run_step "Docker can pull nginx:1.27-alpine" docker_cli pull nginx:1.27-alpine || FAILURES=$((FAILURES + 1))
 
 log "Docker can build API/UI without cache"
-if docker compose build --no-cache local-api vue-ui; then
+if docker_cli compose build --no-cache local-api vue-ui; then
   printf 'PASS: Docker compose no-cache build\n'
 else
   printf 'FAIL: Docker compose no-cache build\n' >&2

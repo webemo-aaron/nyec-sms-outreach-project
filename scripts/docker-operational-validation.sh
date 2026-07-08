@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT_DIR/scripts/docker-cli-lib.sh"
 API_BASE="${API_BASE:-http://127.0.0.1:3001}"
 UI_BASE="${UI_BASE:-http://127.0.0.1:5173}"
 export DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-1}"
@@ -40,10 +41,10 @@ wait_for_url() {
 cd "$ROOT_DIR"
 
 log "Build packaged Docker services"
-docker compose build local-api vue-ui
+docker_cli compose build local-api vue-ui
 
 log "Start packaged Docker services"
-docker compose up -d local-api vue-ui
+docker_cli compose up -d local-api vue-ui
 wait_for_url "$API_BASE/health" "Docker API"
 wait_for_url "$UI_BASE/health" "Docker UI"
 

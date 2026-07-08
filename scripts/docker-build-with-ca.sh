@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT_DIR/scripts/docker-cli-lib.sh"
 CERT_PATH="${1:-}"
 export DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-1}"
 export MSYS_NO_PATHCONV="${MSYS_NO_PATHCONV:-1}"
@@ -30,8 +31,8 @@ docker_build_with_ca() {
   local context="$2"
   shift 2
 
-  if docker buildx version >/dev/null 2>&1; then
-    docker buildx build --load \
+  if docker_cli buildx version >/dev/null 2>&1; then
+    docker_cli buildx build --load \
       --secret id=extra_ca,src="$ABS_CERT" \
       "$@" \
       -t "$image" \
@@ -39,7 +40,7 @@ docker_build_with_ca() {
     return
   fi
 
-  docker build \
+  docker_cli build \
     --secret id=extra_ca,src="$ABS_CERT" \
     "$@" \
     -t "$image" \

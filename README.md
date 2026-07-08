@@ -94,6 +94,18 @@ This reports the Docker CLI path, active Docker context, `DOCKER_HOST`, Docker
 socket state, WSL distro list when available, and whether the daemon is
 reachable from the current shell.
 
+If Docker Desktop is installed on Windows and you are running these scripts from
+WSL without Docker Desktop's WSL integration, point the repo scripts at the
+Windows Docker CLI:
+
+```bash
+export DOCKER_CLI="/mnt/c/Program Files/Docker/Docker/resources/bin/docker.exe"
+./scripts/docker-env-check.sh
+```
+
+The path without `.exe` is Docker Desktop's WSL wrapper and may redirect back to
+`/usr/bin/docker`; use `docker.exe` for Windows Docker from WSL.
+
 If Docker or npm fails with a certificate error on a managed work laptop, run:
 
 ```bash
