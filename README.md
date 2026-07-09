@@ -33,9 +33,24 @@ coding-agent-prompts.md Current backend/frontend/testing prompts
 docs/testing/           Laptop testing checklist and evidence notes
 ```
 
+## Work Laptop Handoff
+
+The work-laptop setup and proof steps are documented in
+[docs/work-laptop-handoff.md](docs/work-laptop-handoff.md).
+
+Use that handoff guide after cloning the public repository:
+
+```bash
+git clone https://github.com/webemo-aaron/nyec-sms-outreach-project.git
+cd nyec-sms-outreach-project
+./scripts/local-operational-validation.sh
+./scripts/docker-operational-validation.sh
+docker compose down
+```
+
 ## Laptop Operational Runbook
 
-This runbook is the end-to-end local workflow for July 8, 2026. It covers the
+This runbook is the end-to-end local workflow for July 9, 2026. It covers the
 operator path the Node/Vue stack is expected to support on a laptop, including
 the HTTP callback simulations used during testing.
 
@@ -416,22 +431,16 @@ Use [docs/testing/local-operational-checklist.md](docs/testing/local-operational
 when running the laptop workflow. Treat UI-only review and operational API
 validation as separate checks.
 
-## Merge to Main
+## Refresh Main
 
-After validating this branch on the work laptop:
+Before validating on a second laptop, refresh the checkout and rerun both gates:
 
 ```bash
 git switch main
-git pull origin main
-git merge --no-ff operational-testing-workflow
-git push origin main
-```
-
-Then rerun:
-
-```bash
+git pull --ff-only origin main
 ./scripts/local-operational-validation.sh
 ./scripts/docker-operational-validation.sh
+docker compose down
 ```
 
 ## Important Security Defaults
@@ -444,6 +453,6 @@ Then rerun:
 
 ## Status
 
-This branch is centered on the local operational testing workflow. The owned
-docs and API contract describe the target Node/Vue laptop path even where some
-endpoint wiring is still being completed in `local-api/` and `vue-ui/`.
+The `main` branch contains the local Node/Vue operational workflow, the
+containerized Docker Compose validation path, and the IRIS/ObjectScript
+foundation. Use synthetic data and Twilio test credentials for laptop proof.

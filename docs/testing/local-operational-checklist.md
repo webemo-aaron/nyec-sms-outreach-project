@@ -3,6 +3,9 @@
 Use this checklist when validating the Node/Vue laptop workflow on this
 repository branch.
 
+For the work-laptop clone and handoff sequence, start with
+[../work-laptop-handoff.md](../work-laptop-handoff.md).
+
 ## Preconditions
 
 - [ ] `local-api/.env` contains Twilio test credentials, not live credentials
