@@ -33,6 +33,76 @@ Expected status:
 ## main...origin/main
 ```
 
+## Update An Existing Work-Laptop Checkout
+
+Use this path when the repository already exists on the work laptop and you
+need to bring it up to the current GitHub `main`.
+
+Start in the current working repo:
+
+```bash
+cd /path/to/nyec-sms-outreach-project
+git status -sb
+git remote -v
+```
+
+Expected remote:
+
+```text
+origin  https://github.com/webemo-aaron/nyec-sms-outreach-project.git (fetch)
+origin  https://github.com/webemo-aaron/nyec-sms-outreach-project.git (push)
+```
+
+Fetch the latest remote state:
+
+```bash
+git fetch origin
+```
+
+If `git status -sb` is clean, update directly:
+
+```bash
+git switch main
+git pull --ff-only origin main
+```
+
+If the work laptop has local edits you want to keep, save them first:
+
+```bash
+git status -sb
+git stash push -u -m "work-laptop-local-before-main-update"
+git switch main
+git pull --ff-only origin main
+git stash list
+```
+
+Only re-apply the stash if those local edits are still needed:
+
+```bash
+git stash pop
+```
+
+If `git stash pop` reports conflicts, stop and resolve them before running
+validation. Do not use `git reset --hard` unless you are intentionally throwing
+away local edits.
+
+Local `.env` files and `local-api/data/state.json` are ignored by Git. They
+should stay on the work laptop, but confirm they contain only Twilio test
+credentials and synthetic data:
+
+```bash
+git status --ignored -s local-api/.env vue-ui/.env local-api/data/state.json
+```
+
+After the update, confirm the checkout is on the current branch:
+
+```bash
+git status -sb
+git log --oneline -1
+```
+
+Then run the validation gates below.
+
 ## Local Node/Vue Validation
 
 Run the local validation script first:

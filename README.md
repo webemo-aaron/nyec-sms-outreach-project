@@ -38,7 +38,8 @@ docs/testing/           Laptop testing checklist and evidence notes
 The work-laptop setup and proof steps are documented in
 [docs/work-laptop-handoff.md](docs/work-laptop-handoff.md).
 
-Use that handoff guide after cloning the public repository:
+Use that handoff guide for either a fresh clone or to update an existing
+work-laptop checkout. Fresh clone path:
 
 ```bash
 git clone https://github.com/webemo-aaron/nyec-sms-outreach-project.git
