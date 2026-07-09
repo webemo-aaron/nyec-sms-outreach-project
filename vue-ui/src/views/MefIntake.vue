@@ -8,6 +8,7 @@ import {
   type MefBatchDetail,
   type MefBatchSummary
 } from '../api/client'
+import { useAdminWizard } from '../components/useAdminWizard'
 
 const isLoading = ref(true)
 const batchSource = ref<'live' | 'demo'>('live')
@@ -19,6 +20,7 @@ const detailError = ref('')
 const importError = ref('')
 const importMessage = ref('')
 const isImporting = ref(false)
+const { openWizard } = useAdminWizard()
 
 const form = reactive({
   fileName: 'NYeC_MEF_2026_07_13.csv',
@@ -99,16 +101,17 @@ onMounted(loadBatches)
 
 <template>
   <section class="page-title">
-    <h1>MEF Intake</h1>
-    <p>Paste or upload CSV content, import it through the operational API, and inspect accepted versus rejected counts.</p>
+    <h1>Cohorts</h1>
+    <p>Review imported cohorts and rejected rows.</p>
+    <div class="actions section">
+      <button class="btn" type="button" @click="openWizard('cohortImport')">Import Cohort</button>
+      <button class="btn secondary" type="button" @click="openWizard('campaign')">Create Campaign</button>
+    </div>
   </section>
 
-  <section class="section">
-    <div v-if="batchSource === 'live'" class="surface-note good">
-      <p>Recent MEF batches are loading from the local Node API.</p>
-    </div>
-    <div v-else class="surface-note warn">
-      <p>Showing seeded MEF history because the batch API load failed: {{ batchError }}</p>
+  <section v-if="batchSource === 'demo'" class="section">
+    <div class="surface-note warn">
+      <p>Unable to refresh cohorts: {{ batchError }}</p>
     </div>
   </section>
 
@@ -117,7 +120,7 @@ onMounted(loadBatches)
       <div class="section-header">
         <div>
           <h2>Import New MEF Batch</h2>
-          <p>Use raw CSV text from your laptop test file. The UI keeps the workflow visible even if the API route is still unavailable.</p>
+          <p>Paste or upload MEF CSV data.</p>
         </div>
       </div>
 
@@ -163,7 +166,7 @@ onMounted(loadBatches)
       <div class="section-header">
         <div>
           <h2>Selected Batch</h2>
-          <p v-if="selectedBatchDetail">Batch-level counts and rejection preview.</p>
+          <p v-if="selectedBatchDetail">Counts and rejection preview.</p>
           <p v-else>Select a recent batch to inspect import details.</p>
         </div>
       </div>
@@ -207,7 +210,7 @@ onMounted(loadBatches)
       </div>
 
       <div v-else class="empty-state">
-        No MEF batch detail is available yet.
+        No cohort detail found.
       </div>
 
       <div v-if="detailError" class="surface-note bad">
@@ -219,8 +222,8 @@ onMounted(loadBatches)
   <section class="card section">
     <div class="section-header">
       <div>
-        <h2>Recent Batches</h2>
-        <p>Use this list to inspect imported cohorts before building campaigns.</p>
+      <h2>Imported Batches</h2>
+        <p>Inspect cohorts before building campaigns.</p>
       </div>
       <span v-if="isLoading" class="badge neutral">Loading</span>
     </div>
@@ -254,7 +257,7 @@ onMounted(loadBatches)
       </table>
     </div>
     <div v-else class="empty-state">
-      No MEF batches have been returned yet.
+      No cohorts found.
     </div>
   </section>
 </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { api, demoTwilioConfig, type TwilioConfig } from '../api/client'
+import { useAdminWizard } from '../components/useAdminWizard'
 
 const isLoading = ref(true)
 const loadSource = ref<'live' | 'demo'>('live')
@@ -11,6 +12,7 @@ const isSaving = ref(false)
 const isSendingTest = ref(false)
 const testError = ref('')
 const testResult = ref('')
+const { openWizard } = useAdminWizard()
 
 const form = reactive<TwilioConfig & { testPhone: string }>({
   ...demoTwilioConfig,
@@ -71,8 +73,8 @@ async function sendTest() {
       body: 'NYeC outreach operational test message'
     })
     testResult.value = result.sid
-      ? `Test message queued with ${result.provider}: ${result.sid}`
-      : `Test message accepted by ${result.provider}.`
+      ? `Test SMS queued: ${result.sid}`
+      : `Test SMS accepted by ${result.provider}.`
   } catch (error) {
     testError.value = error instanceof Error ? error.message : 'Unable to send test SMS.'
   } finally {
@@ -86,15 +88,16 @@ onMounted(loadConfig)
 <template>
   <section class="page-title">
     <h1>Twilio Configuration</h1>
-    <p>Configure local messaging settings, verify credential status, and run a test SMS before dispatch work.</p>
+    <p>Configure Twilio, verify status, and send a test SMS.</p>
+    <div class="actions section">
+      <button class="btn" type="button" @click="openWizard('twilioTest')">Send Twilio Test</button>
+      <button class="btn secondary" type="button" @click="openWizard('dispatch')">Run Dispatch</button>
+    </div>
   </section>
 
-  <section class="section">
-    <div v-if="loadSource === 'live'" class="surface-note good">
-      <p>Loaded from the Node API. Current provider status: <strong>{{ form.status }}</strong>.</p>
-    </div>
-    <div v-else class="surface-note warn">
-      <p>Showing seeded demo configuration because the API load failed: {{ loadError }}</p>
+  <section v-if="loadSource === 'demo'" class="section">
+    <div class="surface-note warn">
+      <p>Unable to refresh Twilio configuration: {{ loadError }}</p>
     </div>
   </section>
 
@@ -104,7 +107,7 @@ onMounted(loadConfig)
         <div>
           <h2>Provider Settings</h2>
           <p v-if="isLoading">Loading configuration...</p>
-          <p v-else>Save mode, routing, and secret reference details for local testing.</p>
+          <p v-else>Save mode, routing, and credentials.</p>
         </div>
         <span class="badge" :class="form.status === 'Configured' ? 'good' : 'warn'">{{ form.status }}</span>
       </div>
@@ -133,13 +136,13 @@ onMounted(loadConfig)
       </div>
 
       <div class="field">
-        <label>Auth Token Secret Ref</label>
-        <input v-model="form.authTokenSecretRef" placeholder="vault://twilio/default/auth-token" />
+        <label>Credential Reference</label>
+        <input v-model="form.authTokenSecretRef" placeholder="Stored credential reference" />
       </div>
 
       <div class="field">
-        <label>Callback Base URL</label>
-        <input v-model="form.callbackBaseUrl" placeholder="http://localhost:3001" />
+        <label>Delivery Callback URL</label>
+        <input v-model="form.callbackBaseUrl" placeholder="https://ops.example.org/nyec" />
       </div>
 
       <div class="actions">
@@ -159,7 +162,7 @@ onMounted(loadConfig)
       <div class="section-header">
         <div>
           <h2>Execution Policy</h2>
-          <p>Use the same window and retry values your dispatch workflow will use.</p>
+          <p>Set send window and retry values.</p>
         </div>
       </div>
 

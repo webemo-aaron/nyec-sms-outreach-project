@@ -28,15 +28,15 @@ const form = reactive<CreateCampaignInput>({
   dailyLimit: 50,
   startDate: '2026-07-13',
   startTime: '09:00',
-  externalSurveyBaseUrl: 'https://survey.customer.org/register',
+  externalSurveyBaseUrl: 'https://outreach.example.org/register',
   smsBody:
-    'Hello {{FirstName}}, your healthcare provider has requested that you complete a secure questionnaire. Please visit {{SurveyLink}}. Reply STOP to opt out.'
+    'Hello {{FirstName}}, please complete the NYeC outreach questionnaire: {{SurveyLink}}. Reply STOP to opt out.'
 })
 
 const messagePreview = computed(() =>
   form.smsBody
     .replace('{{FirstName}}', 'Maria')
-    .replace('{{SurveyLink}}', `${form.externalSurveyBaseUrl ?? 'https://survey.customer.org/register'}?t=secure-token`)
+    .replace('{{SurveyLink}}', `${form.externalSurveyBaseUrl ?? 'https://outreach.example.org/register'}?t=secure-token`)
 )
 
 async function loadBatches() {
@@ -93,15 +93,12 @@ onMounted(loadBatches)
 <template>
   <section class="page-title">
     <h1>Campaign Wizard</h1>
-    <p>Select an imported MEF batch, set a daily dispatch limit, and save a campaign against the operational API.</p>
+    <p>Create a campaign from an imported MEF batch.</p>
   </section>
 
-  <section class="section">
-    <div v-if="batchSource === 'live'" class="surface-note good">
-      <p>MEF cohort choices are loading from the Node API.</p>
-    </div>
-    <div v-else class="surface-note warn">
-      <p>Showing seeded batch choices because MEF load failed: {{ batchError }}</p>
+  <section v-if="batchSource === 'demo'" class="section">
+    <div class="surface-note warn">
+      <p>Unable to refresh cohorts: {{ batchError }}</p>
     </div>
   </section>
 
@@ -110,7 +107,7 @@ onMounted(loadBatches)
       <div class="section-header">
         <div>
           <h2>Campaign Setup</h2>
-          <p>Keep this page focused on laptop test workflows. Launch and manual dispatch happen from the campaign list after save.</p>
+          <p>Launch and dispatch from Campaigns after save.</p>
         </div>
       </div>
 
@@ -167,7 +164,7 @@ onMounted(loadBatches)
       </div>
 
       <div class="field">
-        <label>External Survey Base URL</label>
+        <label>Survey Link Base</label>
         <input v-model="form.externalSurveyBaseUrl" />
       </div>
     </div>
@@ -176,7 +173,7 @@ onMounted(loadBatches)
       <div class="section-header">
         <div>
           <h2>Message and Cohort Preview</h2>
-          <p>Preview the selected cohort count and the exact message body a tester is saving.</p>
+          <p>Review cohort count and message body.</p>
         </div>
       </div>
 
@@ -187,7 +184,7 @@ onMounted(loadBatches)
         </p>
       </div>
       <div v-else class="surface-note warn">
-        <p>No batch detail is available for the currently selected MEF import.</p>
+        <p>Batch detail unavailable.</p>
       </div>
 
       <div class="field">

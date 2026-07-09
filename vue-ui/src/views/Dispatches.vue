@@ -8,6 +8,7 @@ import {
   type DispatchSummary,
   type OutboundMessage
 } from '../api/client'
+import { useAdminWizard } from '../components/useAdminWizard'
 
 const dispatches = ref<DispatchSummary[]>([])
 const dispatchSource = ref<'live' | 'demo'>('live')
@@ -15,6 +16,7 @@ const dispatchError = ref('')
 const outboundMessages = ref<OutboundMessage[]>([])
 const outboundSource = ref<'live' | 'demo'>('live')
 const outboundError = ref('')
+const { openWizard } = useAdminWizard()
 
 async function loadDispatches() {
   try {
@@ -47,16 +49,17 @@ onMounted(async () => {
 
 <template>
   <section class="page-title">
-    <h1>Dispatch Operations</h1>
-    <p>Review dispatch batches, outbound message attempts, and Twilio callback state from the local operational API.</p>
+    <h1>Send Activity</h1>
+    <p>Monitor dispatch batches, outbound attempts, and Twilio callbacks.</p>
+    <div class="actions section">
+      <button class="btn" type="button" @click="openWizard('dispatch')">Run Dispatch</button>
+      <button class="btn secondary" type="button" @click="openWizard('twilioTest')">Send Twilio Test</button>
+    </div>
   </section>
 
-  <section class="section">
-    <div v-if="dispatchSource === 'live'" class="surface-note good">
-      <p>Dispatch batches are loading from the Node API.</p>
-    </div>
-    <div v-else class="surface-note warn">
-      <p>Showing seeded dispatch rows because the dispatch list failed: {{ dispatchError }}</p>
+  <section v-if="dispatchSource === 'demo'" class="section">
+    <div class="surface-note warn">
+      <p>Unable to refresh dispatches: {{ dispatchError }}</p>
     </div>
   </section>
 
@@ -64,7 +67,7 @@ onMounted(async () => {
     <div class="section-header">
       <div>
         <h2>Dispatch Batches</h2>
-        <p>Use this table to compare campaign-level send counts with delivery outcomes.</p>
+        <p>Compare send counts and delivery outcomes.</p>
       </div>
     </div>
 
@@ -97,16 +100,13 @@ onMounted(async () => {
       </table>
     </div>
     <div v-else class="empty-state">
-      No dispatch batches have been returned yet.
+      No dispatch batches found.
     </div>
   </section>
 
-  <section class="section">
-    <div v-if="outboundSource === 'live'" class="surface-note good">
-      <p>Outbound message rows are loading from the Node API.</p>
-    </div>
-    <div v-else class="surface-note warn">
-      <p>Showing seeded outbound rows because the outbound message API failed: {{ outboundError }}</p>
+  <section v-if="outboundSource === 'demo'" class="section">
+    <div class="surface-note warn">
+      <p>Unable to refresh outbound messages: {{ outboundError }}</p>
     </div>
   </section>
 
@@ -114,7 +114,7 @@ onMounted(async () => {
     <div class="section-header">
       <div>
         <h2>Outbound Messages and Callback Status</h2>
-        <p>These rows should make callback progress and terminal failures visible during laptop testing.</p>
+        <p>Track callback progress and terminal failures.</p>
       </div>
     </div>
 
@@ -147,7 +147,7 @@ onMounted(async () => {
       </table>
     </div>
     <div v-else class="empty-state">
-      No outbound messages have been returned yet.
+      No outbound messages found.
     </div>
   </section>
 </template>
