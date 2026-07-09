@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Sequence Diagrams</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f9fc;
+        --panel: #ffffff;
+        --text: #172033;
+        --muted: #627086;
+        --line: #d9e2ee;
+        --accent: #0b6bcb;
+        --good: #147a3d;
+        --warn: #a85d00;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+
+      header {
+        background: var(--panel);
+        border-bottom: 1px solid var(--line);
+        padding: 32px 40px 24px;
+      }
+
+      main {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 28px 24px 56px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.15;
+      }
+
+      h1 {
+        font-size: 34px;
+      }
+
+      h2 {
+        font-size: 22px;
+        margin-bottom: 8px;
+      }
+
+      p {
+        margin: 7px 0 0;
+        color: var(--muted);
+      }
+
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      }
+
+      .kicker {
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+      }
+
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      .card,
+      .diagram-card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .card strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .diagram-card {
+        margin-top: 22px;
+      }
+
+      .diagram-wrap {
+        overflow-x: auto;
+        padding-top: 12px;
+      }
+
+      .mermaid {
+        min-width: 820px;
+      }
+
+      .note {
+        border-left: 4px solid var(--accent);
+        background: #eef5ff;
+        padding: 10px 12px;
+        margin-top: 12px;
+      }
+
+      .note.warn {
+        border-left-color: var(--warn);
+        background: #fff7ed;
+      }
+
+      footer {
+        max-width: 1240px;
+        margin: 0 auto;
+        color: var(--muted);
+        font-size: 13px;
+        padding: 0 24px 32px;
+      }
+
+      @media (max-width: 900px) {
+        header {
+          padding: 24px;
+        }
+
+        .summary {
+          grid-template-columns: 1fr;
+        }
+
+        .mermaid {
+          min-width: 760px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="kicker">Admin Driven Workflow</div>
+      <h1>Easy-to-Read Sequence Diagrams</h1>
+      <p>
+        These diagrams describe the admin/operator experience for local validation and live-readiness.
+        They intentionally avoid customer-facing pages and patient-facing UI.
+      </p>
+      <div class="summary">
+        <div class="card">
+          <strong>Primary User</strong>
+          <p>Admin/operator managing cohorts, campaigns, dispatches, opt-outs, and evidence.</p>
+        </div>
+        <div class="card">
+          <strong>Main System</strong>
+          <p>Vue admin UI calling the local Node operational API.</p>
+        </div>
+        <div class="card">
+          <strong>External System</strong>
+          <p>Twilio for test sends, dispatch sends, status callbacks, and inbound STOP/START.</p>
+        </div>
+        <div class="card">
+          <strong>Evidence</strong>
+          <p>JSON store, audit events, dispatch rows, message rows, opt-outs, and billing summary.</p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="diagram-card">
+        <h2>1. Admin Startup and Health Check</h2>
+        <p>The admin starts local services, confirms health, and opens the operational Vue UI.</p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor Admin
+  participant Shell as Local Shell
+  participant API as Node API
+  participant UI as Vue Admin UI
+  participant Store as JSON Store
+
+  Admin->>Shell: Start API and UI
+  Shell->>API: npm run start
+  API->>Store: Load persisted state
+  Shell->>UI: npm run dev or Docker UI
+  Admin->>API: GET /health
+  API-->>Admin: ok
+  Admin->>UI: Open /command-center
+  UI->>API: GET /api/nyec/dashboard
+  API-->>UI: Current operational summary
+  UI-->>Admin: Command center shows live API status
+          </pre>
+        </div>
+      </section>
+
+      <section class="diagram-card">
+        <h2>2. Cohort Import and Review</h2>
+        <p>The admin imports a cohort, reviews accepted/rejected rows, and decides whether the cohort is usable.</p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor Admin
+  participant UI as Vue Admin UI
+  participant API as Node API
+  participant Store as JSON Store
+
+  Admin->>UI: Upload or paste cohort CSV
+  UI->>API: POST /api/nyec/mef/batches
+  API->>API: Parse CSV and validate phone/facility fields
+  API->>Store: Persist batch, accepted rows, rejected preview
+  API->>Store: Write MEF import audit event
+  API-->>UI: Batch id, accepted count, rejected count
+  UI-->>Admin: Show cohort summary and rejected row preview
+  Admin->>UI: Select usable cohort for campaign setup
+          </pre>
+        </div>
+        <div class="note">
+          Admin UI labels this as cohort management. Internal MEF naming may remain in API paths, but it should not drive the admin experience.
+        </div>
+      </section>
+
+      <section class="diagram-card">
+        <h2>3. Campaign Create, Review, and Launch</h2>
+        <p>The admin creates a campaign from an imported cohort, reviews the operational settings, and launches it.</p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor Admin
+  participant UI as Vue Admin UI
+  participant API as Node API
+  participant Store as JSON Store
+
+  Admin->>UI: Enter campaign name, facility, NPI, limit, SMS body
+  UI->>API: POST /api/nyec/campaigns
+  API->>Store: Persist draft campaign
+  API->>Store: Write CAMPAIGN_CREATED audit event
+  API-->>UI: Campaign id and draft details
+  UI-->>Admin: Show campaign detail
+  Admin->>UI: Launch campaign
+  UI->>API: POST /api/nyec/campaigns/{id}/launch
+  API->>Store: Mark campaign RUNNING
+  API->>Store: Write CAMPAIGN_LAUNCHED audit event
+  API-->>UI: Campaign status RUNNING
+  UI-->>Admin: Campaign is ready for dispatch
+          </pre>
+        </div>
+      </section>
+
+      <section class="diagram-card">
+        <h2>4. Manual Dispatch and Message Rows</h2>
+        <p>The admin triggers dispatch. The API applies daily limits, excludes opt-outs, and records outbound messages.</p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor Admin
+  participant UI as Vue Admin UI
+  participant API as Node API
+  participant Store as JSON Store
+  participant Twilio
+
+  Admin->>UI: Run dispatch
+  UI->>API: POST /api/nyec/campaigns/{id}/dispatches
+  API->>Store: Load campaign, cohort recipients, prior sends, opt-outs
+  API->>API: Apply daily limit and eligibility rules
+  alt Twilio live configured
+    API->>Twilio: Send SMS for each eligible recipient
+    Twilio-->>API: Message SID and queued status
+  else Test/simulated mode
+    API->>API: Generate simulated message SID
+  end
+  API->>Store: Persist dispatch batch and outbound messages
+  API->>Store: Write dispatch and billing evidence
+  API-->>UI: Dispatch summary and message rows
+  UI-->>Admin: Show queued/sent/failed counts
+          </pre>
+        </div>
+      </section>
+
+      <section class="diagram-card">
+        <h2>5. Twilio Status Callback</h2>
+        <p>Twilio reports delivery state. The admin can inspect message status and audit evidence.</p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant Twilio
+  participant API as Node API
+  participant Store as JSON Store
+  actor Admin
+  participant UI as Vue Admin UI
+
+  Twilio->>API: POST /api/nyec/sms/status
+  API->>Store: Find outbound message by SID
+  API->>Store: Update provider/callback status
+  API->>Store: Write TWILIO_STATUS_CALLBACK audit event
+  Admin->>UI: Open Send Activity
+  UI->>API: GET /api/nyec/outbound-messages
+  API-->>UI: Message rows with callback status
+  UI-->>Admin: Show delivered/failed/undelivered state
+          </pre>
+        </div>
+      </section>
+
+      <section class="diagram-card">
+        <h2>6. STOP and START Opt-Out Handling</h2>
+        <p>Inbound STOP suppresses future sends. START clears the active opt-out when allowed by policy.</p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant PatientPhone as Recipient Phone
+  participant Twilio
+  participant API as Node API
+  participant Store as JSON Store
+  actor Admin
+  participant UI as Vue Admin UI
+
+  PatientPhone->>Twilio: Reply STOP
+  Twilio->>API: POST /api/nyec/sms/inbound
+  API->>Store: Create active opt-out for phone
+  API->>Store: Write TWILIO_INBOUND_CALLBACK audit event
+  Admin->>UI: Open opt-out review
+  UI->>API: GET /api/nyec/opt-outs
+  API-->>UI: Active opt-out list
+  UI-->>Admin: Phone appears as opted out
+
+  PatientPhone->>Twilio: Reply START
+  Twilio->>API: POST /api/nyec/sms/inbound
+  API->>Store: Remove active opt-out
+  API->>Store: Write re-subscribe audit event
+  UI->>API: GET /api/nyec/opt-outs
+  API-->>UI: Active opt-out list without phone
+  UI-->>Admin: Phone no longer appears as opted out
+          </pre>
+        </div>
+      </section>
+
+      <section class="diagram-card">
+        <h2>7. No-Credit Twilio Test Credentials</h2>
+        <p>The admin validates Twilio API connectivity with test credentials and magic From number before any real SMS test.</p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor Admin
+  participant UI as Vue Admin UI
+  participant API as Node API
+  participant Twilio as Twilio Test API
+  participant Store as JSON Store
+
+  Admin->>UI: Configure test SID/token and From +15005550006
+  UI->>API: PUT /api/nyec/twilio/config
+  API->>Store: Persist masked Twilio config
+  Admin->>UI: Send test SMS
+  UI->>API: POST /api/nyec/twilio/test
+  API->>Twilio: POST /Messages.json with test credentials
+  Note over API,Twilio: No real SMS is sent and no message credits are used
+  Twilio-->>API: queued SM... response
+  API->>Store: Write TWILIO_TEST_SMS_SENT audit event
+  API-->>UI: Provider Twilio, status queued
+  UI-->>Admin: Test path accepted
+          </pre>
+        </div>
+        <div class="note warn">
+          Use <code>https://example.com</code> or another public placeholder for test credential StatusCallback. Twilio rejects localhost callback URLs.
+        </div>
+      </section>
+
+      <section class="diagram-card">
+        <h2>8. Audit, Billing, and Reset</h2>
+        <p>The admin reviews operational evidence, then resets local test state when validation is complete.</p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor Admin
+  participant UI as Vue Admin UI
+  participant API as Node API
+  participant Store as JSON Store
+
+  Admin->>UI: Open Audit
+  UI->>API: GET /api/nyec/audit/events
+  API-->>UI: Configuration, import, campaign, dispatch, callback, opt-out events
+  Admin->>UI: Open Billing
+  UI->>API: GET /api/nyec/billing/summary
+  API-->>UI: Billable messages and cost estimate
+  Admin->>UI: Reset local test data
+  UI->>API: POST /api/nyec/admin/reset
+  API->>Store: Clear local cohorts, campaigns, dispatches, messages, opt-outs
+  API-->>UI: Reset summary
+  UI-->>Admin: Local state is clean for next validation run
+          </pre>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Sequence diagrams are admin/operator focused. They do not define customer-facing UI pages.
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        securityLevel: "strict",
+        sequence: {
+          actorMargin: 70,
+          boxMargin: 8,
+          messageMargin: 36,
+          mirrorActors: false
+        },
+        themeVariables: {
+          primaryColor: "#eef5ff",
+          primaryTextColor: "#172033",
+          primaryBorderColor: "#0b6bcb",
+          actorBorder: "#0b6bcb",
+          actorBkg: "#ffffff",
+          lineColor: "#627086",
+          signalColor: "#172033",
+          signalTextColor: "#172033",
+          noteBkgColor: "#fff7ed",
+          noteTextColor: "#172033"
+        }
+      });
+    </script>
+  </body>
+</html>

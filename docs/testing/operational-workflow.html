@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NYeC SMS Outreach Operational Workflow</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --text: #172033;
+        --muted: #5e6b7d;
+        --line: #d9e2ef;
+        --accent: #0f6fff;
+        --good: #117a3a;
+        --warn: #a85d00;
+        --bad: #b42318;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+
+      header {
+        padding: 32px 40px 24px;
+        border-bottom: 1px solid var(--line);
+        background: var(--panel);
+      }
+
+      main {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 28px 24px 56px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        line-height: 1.15;
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 34px;
+      }
+
+      h2 {
+        font-size: 22px;
+        margin-bottom: 10px;
+      }
+
+      p {
+        color: var(--muted);
+        margin: 8px 0 0;
+      }
+
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      }
+
+      .kicker {
+        color: var(--accent);
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      .card,
+      .diagram-card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .card strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        padding: 4px 9px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .status.good {
+        color: var(--good);
+      }
+
+      .status.warn {
+        color: var(--warn);
+      }
+
+      .diagram-card {
+        margin-top: 22px;
+      }
+
+      .diagram-wrap {
+        overflow-x: auto;
+        padding: 10px 0;
+      }
+
+      .mermaid {
+        min-width: 720px;
+      }
+
+      .commands {
+        background: #101827;
+        color: #e8eef7;
+        border-radius: 8px;
+        padding: 14px;
+        overflow-x: auto;
+        margin-top: 12px;
+      }
+
+      .notes {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .note {
+        border-left: 4px solid var(--accent);
+        background: #eef5ff;
+        padding: 10px 12px;
+        color: var(--text);
+      }
+
+      .note.warn {
+        border-left-color: var(--warn);
+        background: #fff7ed;
+      }
+
+      footer {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 24px 32px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 860px) {
+        header {
+          padding: 24px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .mermaid {
+          min-width: 680px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="kicker">Local Release Gate</div>
+      <h1>NYeC SMS Outreach Operational Workflow</h1>
+      <p>
+        This page documents the designed local validation workflow before laptop handoff:
+        Node API, Vue UI, synthetic operational data, Twilio test credentials, Docker packaging,
+        and the work-laptop pull/run path.
+      </p>
+      <div class="grid">
+        <div class="card">
+          <strong>Data Policy</strong>
+          <span class="status good">Synthetic data only</span>
+          <p>No real member data is needed for local or Docker validation.</p>
+        </div>
+        <div class="card">
+          <strong>Twilio Policy</strong>
+          <span class="status good">No-credit test path</span>
+          <p>Use Twilio test credentials with magic From number <code>+15005550006</code>.</p>
+        </div>
+        <div class="card">
+          <strong>Handoff Policy</strong>
+          <span class="status warn">Verify, then pull main</span>
+          <p>All repo gates land on <code>main</code> before the work laptop pulls.</p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="diagram-card">
+        <h2>End-to-End Local Gate</h2>
+        <p>
+          The local script verifies code health, starts the API/UI, drives an operational workflow,
+          checks UI routes, optionally probes Twilio, and resets state.
+        </p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+flowchart TD
+  A[Start on main] --> B[Install and test local-api]
+  B --> C[Run Vue UI tests]
+  C --> D[Build Vue production assets]
+  D --> E[Start local API on 127.0.0.1:3001]
+  E --> F[Start Vue UI on 127.0.0.1:5173]
+  F --> G[Reset local API state]
+  G --> H[Import synthetic MEF CSV]
+  H --> I[Create campaign from accepted rows]
+  I --> J[Launch campaign]
+  J --> K[Run manual dispatch]
+  K --> L[Simulate Twilio delivered callback]
+  L --> M[Simulate STOP opt-out]
+  M --> N[Simulate START resubscribe]
+  N --> O[Verify dashboard, billing, audit, messages]
+  O --> P[Check operational UI routes]
+  P --> Q[Optional Twilio test-send]
+  Q --> R[Final reset]
+  R --> S[Local gate complete]
+
+  B -. fail .-> X[Stop and fix API]
+  C -. fail .-> Y[Stop and fix UI contracts/routes]
+  K -. fail .-> Z[Stop and inspect campaign/store logic]
+          </pre>
+        </div>
+        <pre class="commands">./scripts/local-operational-validation.sh</pre>
+      </section>
+
+      <section class="diagram-card">
+        <h2>No-Credit Twilio Test Path</h2>
+        <p>
+          This validates Twilio request construction and credentials without sending a real carrier SMS.
+          Local callback behavior is validated separately by posting directly to the local API.
+        </p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant Env as local-api/.env
+  participant API as Local Node API
+  participant Twilio as Twilio Test Credentials
+  participant Store as Local JSON Store
+
+  Env->>API: Test SID, test auth token, From +15005550006
+  Env->>API: Callback base https://example.com
+  API->>Twilio: POST /Messages.json
+  Note over API,Twilio: Test credentials + magic From number use no SMS credits
+  Twilio-->>API: queued response with SM... SID
+  API->>Store: Audit TWILIO_TEST_SMS_SENT
+  API-->>Env: ok=true, provider=Twilio, status=queued
+
+  Env->>API: POST /api/nyec/sms/status with generated or simulated SID
+  API->>Store: Update outbound callback status
+  Env->>API: POST /api/nyec/sms/inbound STOP / START
+  API->>Store: Create or clear active opt-out
+          </pre>
+        </div>
+        <pre class="commands">TWILIO_FROM_NUMBER=+15005550006
+TWILIO_MESSAGING_SERVICE_SID=
+TWILIO_CALLBACK_BASE_URL=https://example.com
+
+curl -i -H 'content-type: application/json' \
+  -d '{"to":"+14108675310","body":"NYeC local validation test"}' \
+  http://127.0.0.1:3001/api/nyec/twilio/test</pre>
+        <div class="notes">
+          <div class="note">
+            Twilio rejects <code>http://localhost:3001</code> as a public StatusCallback URL.
+            Use a harmless public placeholder for test credentials, then simulate callbacks locally.
+          </div>
+        </div>
+      </section>
+
+      <section class="diagram-card">
+        <h2>Docker Packaging Path</h2>
+        <p>
+          Docker validation uses the same API/UI workflow after building packaged images. On managed
+          laptops, the CA script injects the work root certificate and pins npm for proxy stability.
+        </p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+flowchart LR
+  A[Set DOCKER_CLI for Windows Docker Desktop] --> B[Run docker-env-check]
+  B --> C{Docker reachable?}
+  C -- no --> D[Fix Docker Desktop context or WSL integration]
+  C -- yes --> E[Build API image]
+  E --> F[Build UI image]
+  F --> G[Tag Compose images and convenience latest tags]
+  G --> H[docker compose up local-api vue-ui]
+  H --> I[Wait for /health endpoints]
+  I --> J[Run synthetic operational API workflow]
+  J --> K[Check Vue routes]
+  K --> L[Final reset]
+  L --> M[Docker gate complete]
+
+  E -. TLS failure .-> N[Use docker-build-with-ca.sh with work root CA]
+  F -. npm proxy failure .-> O[npm 9.8.1 pin and NODE_ENV=development in UI build stage]
+          </pre>
+        </div>
+        <pre class="commands">export DOCKER_CLI="/mnt/c/Program Files/Docker/Docker/resources/bin/docker"
+./scripts/docker-env-check.sh
+./scripts/docker-build-with-ca.sh ~/ZscalerRootCertificate-2048-SHA256-Feb2025.crt
+docker compose up -d local-api vue-ui</pre>
+      </section>
+
+      <section class="diagram-card">
+        <h2>Merge and Work-Laptop Pull</h2>
+        <p>
+          Completed changes are verified on the development branch, fast-forward merged into
+          <code>main</code>, verified again, pushed, then pulled on the work laptop.
+        </p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+flowchart TD
+  A[Feature branch work] --> B[Run branch gates]
+  B --> C{All gates pass?}
+  C -- no --> D[Fix branch]
+  D --> B
+  C -- yes --> E[Switch to main]
+  E --> F[Pull origin/main]
+  F --> G[Fast-forward merge feature branch]
+  G --> H[Run main gates]
+  H --> I{Main gates pass?}
+  I -- no --> D
+  I -- yes --> J[Push origin main]
+  J --> K[Work laptop git switch main]
+  K --> L[git pull --ff-only origin main]
+  L --> M[Rebuild/run local or Docker workflow]
+  M --> N[Open /command-center and confirm Operational Vue UI]
+          </pre>
+        </div>
+        <pre class="commands">git switch main
+git pull --ff-only origin main
+./scripts/local-operational-validation.sh</pre>
+      </section>
+
+      <section class="diagram-card">
+        <h2>Functional Test Coverage</h2>
+        <p>
+          The current safety net covers backend behavior, UI contracts, route aliases, production build,
+          Docker configuration, and end-to-end synthetic operations.
+        </p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+mindmap
+  root((Functional Coverage))
+    API
+      health
+      dashboard contract
+      Twilio missing credential errors
+      Twilio request shape
+      JSON store persistence
+      MEF import
+      campaign launch
+      dispatch limits
+      callbacks
+      STOP and START
+      reset protections
+    UI
+      API contract routes
+      contextual API errors
+      operational route aliases
+      no internal source-system wording
+      production build
+    Workflow
+      local validation script
+      Docker validation script
+      synthetic data only
+      final reset
+    Twilio
+      no-credit test credentials
+      magic From number
+      local callback simulation
+          </pre>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Generated as repo documentation. Mermaid rendering uses the browser via the Mermaid ESM bundle.
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        securityLevel: "strict",
+        flowchart: { htmlLabels: false },
+        themeVariables: {
+          primaryColor: "#eef5ff",
+          primaryTextColor: "#172033",
+          primaryBorderColor: "#0f6fff",
+          lineColor: "#5e6b7d",
+          secondaryColor: "#ffffff",
+          tertiaryColor: "#f6f8fb"
+        }
+      });
+    </script>
+  </body>
+</html>

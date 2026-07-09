@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Customer and Patient Outreach Workflow</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f9fc;
+        --panel: #ffffff;
+        --ink: #162033;
+        --muted: #617086;
+        --line: #d9e2ee;
+        --accent: #0b6bcb;
+        --teal: #0f8f8c;
+        --good: #147a3d;
+        --warn: #a85d00;
+        --bad: #b42318;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+
+      header {
+        background: var(--panel);
+        border-bottom: 1px solid var(--line);
+        padding: 34px 42px 26px;
+      }
+
+      main {
+        max-width: 1220px;
+        margin: 0 auto;
+        padding: 28px 24px 56px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.15;
+      }
+
+      h1 {
+        font-size: 34px;
+      }
+
+      h2 {
+        font-size: 22px;
+        margin-bottom: 8px;
+      }
+
+      h3 {
+        font-size: 16px;
+        margin-bottom: 6px;
+      }
+
+      p {
+        margin: 7px 0 0;
+        color: var(--muted);
+      }
+
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      }
+
+      .kicker {
+        color: var(--teal);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+      }
+
+      .grid {
+        display: grid;
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      .cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .card,
+      .section {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .section {
+        margin-top: 22px;
+      }
+
+      .tag {
+        display: inline-flex;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 9px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .tag.good {
+        color: var(--good);
+      }
+
+      .tag.warn {
+        color: var(--warn);
+      }
+
+      .tag.bad {
+        color: var(--bad);
+      }
+
+      .diagram-wrap {
+        overflow-x: auto;
+        padding-top: 12px;
+      }
+
+      .mermaid {
+        min-width: 820px;
+      }
+
+      .checklist {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+        padding: 0;
+        list-style: none;
+      }
+
+      .checklist li {
+        border-left: 4px solid var(--accent);
+        background: #eef5ff;
+        padding: 9px 11px;
+      }
+
+      .note {
+        border-left: 4px solid var(--warn);
+        background: #fff7ed;
+        padding: 11px 13px;
+        margin-top: 12px;
+      }
+
+      .sample-message {
+        background: #101827;
+        color: #e8eef7;
+        border-radius: 8px;
+        padding: 14px;
+        overflow-x: auto;
+        margin-top: 12px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        border-bottom: 1px solid var(--line);
+        padding: 10px 8px;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      footer {
+        max-width: 1220px;
+        margin: 0 auto;
+        color: var(--muted);
+        font-size: 13px;
+        padding: 0 24px 32px;
+      }
+
+      @media (max-width: 920px) {
+        header {
+          padding: 24px;
+        }
+
+        .cols-4,
+        .cols-3 {
+          grid-template-columns: 1fr;
+        }
+
+        .mermaid {
+          min-width: 760px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="kicker">Customer and Patient Experience</div>
+      <h1>NYeC SMS Outreach Customer Workflow</h1>
+      <p>
+        This document describes the experience the customer team, outreach operator, support team,
+        and patient should have when running an SMS outreach campaign. It is written as an operating
+        model, not a technical build plan.
+      </p>
+      <div class="grid cols-4">
+        <div class="card">
+          <h3>Customer Outcome</h3>
+          <span class="tag good">Prepared campaign</span>
+          <p>Customer approves cohort, message, sender identity, schedule, and support path.</p>
+        </div>
+        <div class="card">
+          <h3>Operator Outcome</h3>
+          <span class="tag good">Controlled launch</span>
+          <p>Operator imports MEF data, reviews rejects, launches, dispatches, and monitors evidence.</p>
+        </div>
+        <div class="card">
+          <h3>Patient Outcome</h3>
+          <span class="tag good">Clear next step</span>
+          <p>Patient receives a concise message with sender context, action link, and opt-out language.</p>
+        </div>
+        <div class="card">
+          <h3>Compliance Outcome</h3>
+          <span class="tag warn">Auditable trail</span>
+          <p>Every configuration, dispatch, callback, opt-out, and reset creates reviewable evidence.</p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="section">
+        <h2>Experience Principles</h2>
+        <div class="grid cols-3">
+          <div class="card">
+            <h3>Minimum Necessary Content</h3>
+            <p>SMS copy should avoid PHI and should not expose diagnosis, program eligibility, or sensitive details.</p>
+          </div>
+          <div class="card">
+            <h3>Consent and Control</h3>
+            <p>Every patient-facing message includes opt-out language, and STOP/START behavior is immediate and visible.</p>
+          </div>
+          <div class="card">
+            <h3>Human Support Path</h3>
+            <p>Customer support should know what campaign is active, what the message says, and how to handle confusion or opt-out requests.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Customer-to-Patient Journey</h2>
+        <p>
+          The outreach process has four operating lanes: customer readiness, operator execution,
+          system processing, and patient response.
+        </p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+flowchart TD
+  A[Customer identifies outreach goal] --> B[Customer approves message purpose and support script]
+  B --> C[Operator imports synthetic or approved MEF cohort]
+  C --> D[System validates rows and reports accepted/rejected counts]
+  D --> E{Reject rate acceptable?}
+  E -- no --> F[Customer fixes source data or narrows cohort]
+  F --> C
+  E -- yes --> G[Operator creates campaign]
+  G --> H[Customer reviews campaign summary]
+  H --> I{Approved to send?}
+  I -- no --> J[Revise cohort, message, schedule, or limit]
+  J --> G
+  I -- yes --> K[Operator launches campaign]
+  K --> L[Operator runs dispatch within daily limit]
+  L --> M[Patient receives SMS]
+  M --> N{Patient response}
+  N -- completes action --> O[Dashboard, billing, and audit update]
+  N -- STOP --> P[Opt-out recorded and future dispatch excludes phone]
+  N -- START --> Q[Opt-out cleared and phone becomes eligible again]
+  N -- calls support --> R[Support uses campaign summary and audit trail]
+  O --> S[Customer reviews campaign performance]
+  P --> S
+  Q --> S
+  R --> S
+          </pre>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Customer Readiness Checklist</h2>
+        <ul class="checklist">
+          <li>Confirm the outreach purpose and success metric, such as completed questionnaire, registration, or follow-up response.</li>
+          <li>Confirm the approved cohort source and date, plus who owns corrections for rejected rows.</li>
+          <li>Approve sender identity, message body, support script, daily limit, send window, and launch date.</li>
+          <li>Confirm whether recipients have a support number, landing page, or survey URL that matches the message.</li>
+          <li>Confirm customer support can recognize the campaign name and route patient questions.</li>
+          <li>Confirm opt-out expectations: STOP suppresses future dispatch, START re-enables eligibility.</li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2>Patient SMS Experience</h2>
+        <p>
+          The patient should understand who is contacting them, what action is requested, and how to opt out.
+          The message should not require the patient to infer clinical or eligibility details from the SMS.
+        </p>
+        <pre class="sample-message">Hello Ana, NYC Health Center A asks you to complete a secure questionnaire.
+Visit https://survey.example.test/r/10001. Reply STOP to opt out.</pre>
+        <div class="note">
+          Use customer-approved language. Keep sensitive context behind the secure destination rather than in the SMS body.
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Patient Response Handling</h2>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant Patient
+  participant Twilio
+  participant API as Outreach API
+  participant Store as Local/Operational Store
+  participant Operator
+  participant Support
+
+  API->>Twilio: Dispatch approved SMS
+  Twilio->>Patient: Deliver message
+  Twilio-->>API: Status callback delivered/failed
+  API->>Store: Update outbound message and audit
+  Patient->>Twilio: STOP
+  Twilio-->>API: Inbound STOP callback
+  API->>Store: Create active opt-out
+  Operator->>Store: Reviews opt-out list and audit
+  Patient->>Support: Calls with question
+  Support->>Operator: Confirms campaign, message, and next step
+  Patient->>Twilio: START
+  Twilio-->>API: Inbound START callback
+  API->>Store: Remove active opt-out
+          </pre>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Operational Roles</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Responsibilities</th>
+              <th>Evidence They Need</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Customer Owner</td>
+              <td>Approves campaign goal, message, cohort, send window, and support process.</td>
+              <td>Campaign summary, MEF accepted/rejected counts, approved SMS copy, launch decision.</td>
+            </tr>
+            <tr>
+              <td>Outreach Operator</td>
+              <td>Imports MEF, creates campaign, launches, dispatches, monitors callbacks, resets test state.</td>
+              <td>Dashboard, dispatches, outbound messages, audit events, billing summary, opt-out list.</td>
+            </tr>
+            <tr>
+              <td>Support Team</td>
+              <td>Answers patient questions, explains the message, routes technical issues, honors opt-out questions.</td>
+              <td>Active campaign name, sender identity, message copy, destination URL, escalation contact.</td>
+            </tr>
+            <tr>
+              <td>Patient</td>
+              <td>Receives SMS, completes requested action, replies STOP or START if desired, contacts support if confused.</td>
+              <td>Clear sender context, secure link, opt-out language, support path if provided by customer.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>Campaign Approval Gates</h2>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+flowchart LR
+  A[Cohort loaded] --> B[Rejects reviewed]
+  B --> C[Message approved]
+  C --> D[Sender configured]
+  D --> E[Daily limit approved]
+  E --> F[Support script ready]
+  F --> G[Launch approved]
+  G --> H[Manual dispatch]
+  H --> I[Monitor callbacks]
+  I --> J[Customer performance review]
+
+  B -. high rejects .-> B1[Pause and correct source data]
+  C -. PHI or unclear language .-> C1[Revise message]
+  D -. sender not verified .-> D1[Fix Twilio sender setup]
+  F -. no support path .-> F1[Hold launch]
+          </pre>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Customer Handoff Package</h2>
+        <ul class="checklist">
+          <li>Campaign name, launch date, send window, daily limit, sender identity, and approved SMS copy.</li>
+          <li>MEF import summary: total rows, accepted rows, rejected rows, and top rejection reasons.</li>
+          <li>Support script: why the patient is receiving the message, what the link does, and who to contact for help.</li>
+          <li>Opt-out behavior: STOP suppresses future messages; START re-enables eligibility if permitted by customer policy.</li>
+          <li>Monitoring plan: dashboard review cadence, callback failure review, and escalation owner.</li>
+          <li>Post-run evidence: dispatch count, delivery status, opt-outs, billing estimate, and audit event export.</li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2>Release Readiness From the Customer Perspective</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Question</th>
+              <th>Ready Signal</th>
+              <th>Stop Signal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Can the customer explain the campaign?</td>
+              <td>Goal, audience, message, and support flow are documented.</td>
+              <td>Support cannot identify the message or patient next step.</td>
+            </tr>
+            <tr>
+              <td>Can the operator prove safe execution?</td>
+              <td>Local validation passed with synthetic data and reset evidence.</td>
+              <td>Dispatch, callback, opt-out, or audit evidence is missing.</td>
+            </tr>
+            <tr>
+              <td>Can the patient control future messaging?</td>
+              <td>STOP and START are tested and visible in opt-out review.</td>
+              <td>STOP does not suppress future dispatch eligibility.</td>
+            </tr>
+            <tr>
+              <td>Can the team avoid unnecessary credit spend?</td>
+              <td>Twilio test credentials and magic number validate request path before live sender testing.</td>
+              <td>Live credentials are used before local no-credit validation passes.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+
+    <footer>
+      This workflow intentionally avoids real member data and PHI. Customer-specific policy,
+      consent language, and regulatory review should be completed before live outreach.
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        securityLevel: "strict",
+        flowchart: { htmlLabels: false },
+        themeVariables: {
+          primaryColor: "#eef5ff",
+          primaryTextColor: "#162033",
+          primaryBorderColor: "#0b6bcb",
+          lineColor: "#617086",
+          secondaryColor: "#ffffff",
+          tertiaryColor: "#f7f9fc"
+        }
+      });
+    </script>
+  </body>
+</html>
