@@ -1,7 +1,9 @@
 node_modules/
 dist/
+.worktrees/
 .env
 .env.local
 local-api/.env
 vue-ui/.env
 local-api/data/
+.gstack/
