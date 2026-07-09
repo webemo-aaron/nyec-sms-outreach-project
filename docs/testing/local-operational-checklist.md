@@ -50,6 +50,7 @@ collecting detailed evidence.
 
 - [ ] Open `/twilio`
 - [ ] Confirm mode is `TEST`
+- [ ] Confirm From Number shows the `TWILIO_FROM_NUMBER` value from `local-api/.env`
 - [ ] Confirm callback base URL is `http://127.0.0.1:3001`
 - [ ] Run `Send Test SMS` or `POST /api/nyec/twilio/test`
 - [ ] Capture either the queued SID or the explicit `TWILIO_NOT_CONFIGURED` error

@@ -206,14 +206,14 @@ DATA_FILE=./data/state.json
 TWILIO_MODE=TEST
 TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_AUTH_TOKEN=your_test_auth_token
-TWILIO_MESSAGING_SERVICE_SID=MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_FROM_NUMBER=
+TWILIO_FROM_NUMBER=+15005550006
 TWILIO_CALLBACK_BASE_URL=http://127.0.0.1:3001
 ```
 
 Then open the UI at `/twilio` and confirm:
 
 - `Mode` is `TEST`
+- `From Number` shows the value from `TWILIO_FROM_NUMBER`
 - `Callback Base URL` is `http://127.0.0.1:3001`
 - `Send Test SMS` succeeds or returns a clear Twilio configuration error
 
@@ -232,8 +232,10 @@ curl -i \
   http://127.0.0.1:3001/api/nyec/twilio/test
 ```
 
-Twilio's magic test number `+15005550006` is appropriate for local test-mode
-verification.
+Twilio's magic test number `+15005550006` is appropriate as the local
+test-mode sender and destination for verification. The current Node/Vue path
+uses Account SID, Auth Token, and `TWILIO_FROM_NUMBER`; Messaging Service SID is
+not required.
 
 ### 4. Import a sample MEF CSV
 

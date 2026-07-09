@@ -144,7 +144,8 @@ export type BillingSummary = {
 export type TwilioConfig = {
   mode: string
   accountSid: string
-  messagingServiceSid: string
+  authToken?: string
+  messagingServiceSid?: string
   fromNumber?: string
   callbackBaseUrl: string
   sendWindowStart: string
@@ -459,7 +460,9 @@ export const demoAuditEvents: AuditEvent[] = [
 export const demoTwilioConfig: TwilioConfig = {
   mode: 'TEST',
   accountSid: 'AC***************1234',
-  messagingServiceSid: 'MG***************5678',
+  authToken: '',
+  messagingServiceSid: '',
+  fromNumber: '+15005550006',
   callbackBaseUrl: 'http://localhost:3001',
   sendWindowStart: '09:00',
   sendWindowEnd: '17:00',

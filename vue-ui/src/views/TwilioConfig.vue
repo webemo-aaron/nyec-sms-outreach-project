@@ -12,6 +12,7 @@ const isSaving = ref(false)
 const isSendingTest = ref(false)
 const testError = ref('')
 const testResult = ref('')
+const authTokenInput = ref('')
 const { openWizard } = useAdminWizard()
 
 const form = reactive<TwilioConfig & { testPhone: string }>({
@@ -45,8 +46,7 @@ async function save() {
     const result = await api.saveTwilioConfig({
       mode: form.mode,
       accountSid: form.accountSid,
-      messagingServiceSid: form.messagingServiceSid,
-      fromNumber: form.fromNumber,
+      ...(authTokenInput.value ? { authToken: authTokenInput.value } : {}),
       callbackBaseUrl: form.callbackBaseUrl,
       sendWindowStart: form.sendWindowStart,
       sendWindowEnd: form.sendWindowEnd,
@@ -54,6 +54,7 @@ async function save() {
       status: form.status,
       authTokenSecretRef: form.authTokenSecretRef
     })
+    authTokenInput.value = ''
     saveMessage.value = result.message ?? `Configuration saved${result.mode ? ` (${result.mode})` : ''}.`
   } catch (error) {
     saveError.value = error instanceof Error ? error.message : 'Unable to save Twilio configuration.'
@@ -107,7 +108,7 @@ onMounted(loadConfig)
         <div>
           <h2>Provider Settings</h2>
           <p v-if="isLoading">Loading configuration...</p>
-          <p v-else>Save mode, routing, and credentials.</p>
+          <p v-else>Save mode and Account SID. The sender number comes from environment configuration.</p>
         </div>
         <span class="badge" :class="form.status === 'Configured' ? 'good' : 'warn'">{{ form.status }}</span>
       </div>
@@ -126,18 +127,13 @@ onMounted(loadConfig)
       </div>
 
       <div class="field">
-        <label>Messaging Service SID</label>
-        <input v-model="form.messagingServiceSid" placeholder="MG..." />
+        <label>From Number</label>
+        <input :value="form.fromNumber || 'Set TWILIO_FROM_NUMBER in local-api/.env'" disabled />
       </div>
 
       <div class="field">
-        <label>From Number (optional)</label>
-        <input v-model="form.fromNumber" placeholder="+15555550123" />
-      </div>
-
-      <div class="field">
-        <label>Credential Reference</label>
-        <input v-model="form.authTokenSecretRef" placeholder="Stored credential reference" />
+        <label>Auth Token</label>
+        <input v-model="authTokenInput" type="password" placeholder="Leave blank to keep current token" autocomplete="off" />
       </div>
 
       <div class="field">

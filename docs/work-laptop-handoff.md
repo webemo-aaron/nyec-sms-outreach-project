@@ -212,10 +212,12 @@ DATA_FILE=./data/state.json
 TWILIO_MODE=TEST
 TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_AUTH_TOKEN=your_test_auth_token
-TWILIO_MESSAGING_SERVICE_SID=MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_FROM_NUMBER=
+TWILIO_FROM_NUMBER=+15005550006
 TWILIO_CALLBACK_BASE_URL=http://127.0.0.1:3001
 ```
+
+The current Node/Vue Twilio path uses Account SID, Auth Token, and the From
+Number configured in `local-api/.env`. Messaging Service SID is not required.
 
 For the Vue UI:
 

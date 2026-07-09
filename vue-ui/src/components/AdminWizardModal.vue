@@ -283,7 +283,7 @@ async function handleCohortFile(event: Event) {
 
           <template v-if="activeWizard === 'twilioTest'">
             <div v-if="currentStep.id === 'config'" class="stack">
-              <table class="table"><tbody><tr><td>Mode</td><td>{{ twilioForm.mode }}</td></tr><tr><td>Status</td><td>{{ twilioForm.status }}</td></tr><tr><td>Send Window</td><td>{{ twilioForm.sendWindowStart }}-{{ twilioForm.sendWindowEnd }}</td></tr></tbody></table>
+              <table class="table"><tbody><tr><td>Mode</td><td>{{ twilioForm.mode }}</td></tr><tr><td>Status</td><td>{{ twilioForm.status }}</td></tr><tr><td>From Number</td><td>{{ twilioForm.fromNumber || 'Set in local-api/.env' }}</td></tr><tr><td>Send Window</td><td>{{ twilioForm.sendWindowStart }}-{{ twilioForm.sendWindowEnd }}</td></tr></tbody></table>
             </div>
             <div v-else-if="currentStep.id === 'send'" class="form">
               <div class="field"><label>Test Destination</label><input v-model="twilioForm.testPhone" /></div>

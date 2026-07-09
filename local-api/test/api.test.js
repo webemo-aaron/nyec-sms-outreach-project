@@ -50,7 +50,7 @@ describe('local API', () => {
         TWILIO_MODE: 'TEST',
         TWILIO_ACCOUNT_SID: 'AC1234567890',
         TWILIO_AUTH_TOKEN: 'secret-token',
-        TWILIO_MESSAGING_SERVICE_SID: 'MG1234567890',
+        TWILIO_FROM_NUMBER: '+15005550006',
         TWILIO_CALLBACK_BASE_URL: 'http://localhost:3001'
       },
       twilioTransport: async (request) => {
@@ -70,6 +70,79 @@ describe('local API', () => {
     assert.equal(json.data.sid, 'SM789')
     assert.equal(json.data.status, 'queued')
     assert.equal(calls[0].form.Body, 'Route test')
+    assert.equal(calls[0].form.From, '+15005550006')
+  })
+
+  it('sends Twilio test SMS with Account SID, Auth Token, and env From Number', async () => {
+    const calls = []
+    const configuredApp = createApp({
+      env: {
+        NODE_ENV: 'test',
+        TWILIO_MODE: 'TEST',
+        TWILIO_ACCOUNT_SID: 'AC1234567890',
+        TWILIO_AUTH_TOKEN: 'secret-token',
+        TWILIO_FROM_NUMBER: '+15005550006',
+        TWILIO_CALLBACK_BASE_URL: 'https://example.test'
+      },
+      twilioTransport: async (request) => {
+        calls.push(request)
+        return { statusCode: 201, body: { sid: 'SMFROM', status: 'queued' } }
+      }
+    })
+
+    const { response, json } = await request(configuredApp, '/api/nyec/twilio/test', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ to: '+15005550006', body: 'From env route test' })
+    })
+
+    assert.equal(response.status, 200)
+    assert.equal(json.ok, true)
+    assert.equal(json.data.sid, 'SMFROM')
+    assert.equal(calls[0].form.From, '+15005550006')
+    assert.equal(calls[0].form.MessagingServiceSid, undefined)
+    assert.equal(calls[0].headers.authorization, `Basic ${Buffer.from('AC1234567890:secret-token').toString('base64')}`)
+  })
+
+  it('preserves env-owned From Number when the UI saves credential settings', async () => {
+    const calls = []
+    const configurableApp = createApp({
+      env: {
+        NODE_ENV: 'test',
+        TWILIO_MODE: 'TEST',
+        TWILIO_ACCOUNT_SID: 'AC1234567890',
+        TWILIO_AUTH_TOKEN: 'secret-token',
+        TWILIO_FROM_NUMBER: '+15005550006'
+      },
+      twilioTransport: async (request) => {
+        calls.push(request)
+        return { statusCode: 201, body: { sid: 'SMSAVED', status: 'queued' } }
+      }
+    })
+
+    const updateResponse = await request(configurableApp, '/api/nyec/twilio/config', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'TEST',
+        accountSid: 'AC12********7890',
+        callbackBaseUrl: 'https://example.test/hooks'
+      })
+    })
+
+    assert.equal(updateResponse.response.status, 200)
+    assert.equal(updateResponse.json.ok, true)
+    assert.equal(updateResponse.json.data.fromNumber, '+15005550006')
+
+    const sendResponse = await request(configurableApp, '/api/nyec/twilio/test', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ to: '+15005550006', body: 'Preserved From test' })
+    })
+
+    assert.equal(sendResponse.response.status, 200)
+    assert.equal(calls[0].form.From, '+15005550006')
+    assert.equal(calls[0].headers.authorization, `Basic ${Buffer.from('AC1234567890:secret-token').toString('base64')}`)
   })
 
   it('masks Twilio secrets when reading and updating config', async () => {

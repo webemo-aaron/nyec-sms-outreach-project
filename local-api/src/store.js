@@ -23,6 +23,16 @@ function normalizePhone(value) {
   return `+${digits}`
 }
 
+function isMaskedSecret(value) {
+  return typeof value === 'string' && value.includes('*')
+}
+
+function nextConfigValue(currentValue, payloadValue) {
+  if (payloadValue === undefined) return currentValue
+  if (isMaskedSecret(payloadValue)) return currentValue
+  return payloadValue
+}
+
 function normalizeHeader(value) {
   return String(value ?? '')
     .trim()
@@ -146,7 +156,7 @@ function renderTemplate(template, recipient) {
 
 function summarizeTwilioStatus(twilioConfig) {
   if (twilioConfig.mode === 'TEST') return 'Configured for test mode'
-  if (twilioConfig.accountSid && twilioConfig.authToken && (twilioConfig.messagingServiceSid || twilioConfig.fromNumber)) {
+  if (twilioConfig.accountSid && twilioConfig.authToken && twilioConfig.fromNumber) {
     return 'Configured for live sends'
   }
   return 'Missing credentials'
@@ -401,9 +411,9 @@ function campaignDetail(campaign) {
       state.twilioConfig = {
         ...state.twilioConfig,
         mode: payload.mode ?? state.twilioConfig.mode,
-        accountSid: payload.accountSid ?? state.twilioConfig.accountSid,
-        authToken: payload.authToken ?? state.twilioConfig.authToken,
-        messagingServiceSid: payload.messagingServiceSid ?? state.twilioConfig.messagingServiceSid,
+        accountSid: nextConfigValue(state.twilioConfig.accountSid, payload.accountSid),
+        authToken: nextConfigValue(state.twilioConfig.authToken, payload.authToken),
+        messagingServiceSid: nextConfigValue(state.twilioConfig.messagingServiceSid, payload.messagingServiceSid),
         fromNumber: payload.fromNumber ?? state.twilioConfig.fromNumber,
         callbackBaseUrl: payload.callbackBaseUrl ?? state.twilioConfig.callbackBaseUrl,
         updatedAt: isoNow(now)

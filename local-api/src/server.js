@@ -54,7 +54,7 @@ function twilioConfigView(twilioConfig) {
   const configured =
     Boolean(twilioConfig.accountSid) &&
     Boolean(twilioConfig.authToken) &&
-    Boolean(twilioConfig.messagingServiceSid || twilioConfig.fromNumber)
+    Boolean(twilioConfig.fromNumber)
 
   return {
     mode: twilioConfig.mode,
@@ -75,9 +75,7 @@ function missingTwilioCredentials(twilioConfig) {
   const missing = []
   if (!twilioConfig.accountSid) missing.push('TWILIO_ACCOUNT_SID')
   if (!twilioConfig.authToken) missing.push('TWILIO_AUTH_TOKEN')
-  if (!twilioConfig.messagingServiceSid && !twilioConfig.fromNumber) {
-    missing.push('TWILIO_MESSAGING_SERVICE_SID or TWILIO_FROM_NUMBER')
-  }
+  if (!twilioConfig.fromNumber) missing.push('TWILIO_FROM_NUMBER')
   return missing
 }
 

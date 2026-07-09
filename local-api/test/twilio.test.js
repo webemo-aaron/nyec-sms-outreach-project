@@ -4,14 +4,14 @@ import { describe, it } from 'node:test'
 import { createTwilioClient } from '../src/twilio.js'
 
 describe('Twilio client', () => {
-  it('builds a Twilio Messages API request with Basic auth and messaging service', async () => {
+  it('builds a Twilio Messages API request with Basic auth and From number', async () => {
     const calls = []
     const client = createTwilioClient(
       {
         accountSid: 'AC1234567890',
         authToken: 'secret-token',
         messagingServiceSid: 'MG1234567890',
-        fromNumber: '',
+        fromNumber: '+15005550006',
         callbackBaseUrl: 'https://example.test'
       },
       async (request) => {
@@ -32,7 +32,8 @@ describe('Twilio client', () => {
     assert.equal(calls[0].headers.authorization, `Basic ${Buffer.from('AC1234567890:secret-token').toString('base64')}`)
     assert.equal(calls[0].form.To, '+15005550006')
     assert.equal(calls[0].form.Body, 'NYeC outreach test')
-    assert.equal(calls[0].form.MessagingServiceSid, 'MG1234567890')
+    assert.equal(calls[0].form.From, '+15005550006')
+    assert.equal(calls[0].form.MessagingServiceSid, undefined)
     assert.equal(calls[0].form.StatusCallback, 'https://example.test/api/nyec/sms/status')
   })
 

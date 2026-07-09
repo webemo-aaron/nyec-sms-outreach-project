@@ -849,7 +849,7 @@ components:
       required:
         - mode
         - accountSid
-        - messagingServiceSid
+        - fromNumber
         - callbackBaseUrl
         - sendWindowStart
         - sendWindowEnd
@@ -864,10 +864,10 @@ components:
           description: Masked value only
         messagingServiceSid:
           type: string
-          description: Masked value only
+          description: Optional legacy field. The Node/Vue laptop workflow sends with fromNumber.
         fromNumber:
           type: string
-          description: Optional when messaging service is used
+          description: Sender number from TWILIO_FROM_NUMBER
         callbackBaseUrl:
           type: string
         sendWindowStart:
@@ -893,8 +893,10 @@ components:
           writeOnly: true
         messagingServiceSid:
           type: string
+          description: Optional legacy field. Not required by the Node/Vue laptop workflow.
         fromNumber:
           type: string
+          description: Sender number from TWILIO_FROM_NUMBER
         callbackBaseUrl:
           type: string
         sendWindowStart:

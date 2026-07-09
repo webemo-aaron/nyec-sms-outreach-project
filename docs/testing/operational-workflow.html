@@ -273,8 +273,9 @@ sequenceDiagram
   API->>Store: Create or clear active opt-out
           </pre>
         </div>
-        <pre class="commands">TWILIO_FROM_NUMBER=+15005550006
-TWILIO_MESSAGING_SERVICE_SID=
+        <pre class="commands">TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=your_test_auth_token
+TWILIO_FROM_NUMBER=+15005550006
 TWILIO_CALLBACK_BASE_URL=https://example.com
 
 curl -i -H 'content-type: application/json' \

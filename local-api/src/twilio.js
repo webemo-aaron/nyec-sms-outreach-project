@@ -59,8 +59,7 @@ export function createTwilioClient(config, transport = defaultTransport) {
       StatusCallback: buildStatusCallback(config.callbackBaseUrl)
     }
 
-    if (config.messagingServiceSid) form.MessagingServiceSid = config.messagingServiceSid
-    else form.From = config.fromNumber
+    form.From = config.fromNumber
 
     const request = {
       method: 'POST',

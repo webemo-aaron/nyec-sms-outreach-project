@@ -87,6 +87,17 @@ test('visible UI copy avoids implementation source-status wording', () => {
   }
 })
 
+test('Twilio UI uses env From Number instead of Messaging Service setup', () => {
+  const twilioSources = [
+    readFileSync(join(srcDir, 'views', 'TwilioConfig.vue'), 'utf8'),
+    readFileSync(join(srcDir, 'components', 'AdminWizardModal.vue'), 'utf8')
+  ].join('\n')
+
+  assert.match(twilioSources, /From Number/)
+  assert.match(twilioSources, /Account SID/)
+  assert.doesNotMatch(twilioSources, /Messaging Service SID/)
+})
+
 test('does not expose internal source-system wording in MEF intake UI', () => {
   assert.doesNotMatch(mefIntakeSource, new RegExp('name' + 'space', 'i'))
   assert.doesNotMatch(mefIntakeSource, new RegExp('hx' + 'common', 'i'))
