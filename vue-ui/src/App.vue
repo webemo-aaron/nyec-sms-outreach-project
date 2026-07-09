@@ -5,18 +5,17 @@
         <div class="brand-mark"></div>
         <div>
           <div class="brand-title">NYeC SMS OCM</div>
-          <div class="brand-subtitle">Outreach Campaign Manager</div>
+          <div class="brand-subtitle">Campaign Manager</div>
         </div>
       </div>
       <nav class="nav">
         <RouterLink to="/command-center">Command Center</RouterLink>
-        <RouterLink to="/mef-intake">MEF Intake</RouterLink>
+        <RouterLink to="/mef-intake">Cohorts</RouterLink>
         <RouterLink to="/campaigns">Campaigns</RouterLink>
-        <RouterLink to="/campaigns/new">Campaign Wizard</RouterLink>
-        <RouterLink to="/dispatches">Dispatches</RouterLink>
+        <RouterLink to="/dispatches">Send Activity</RouterLink>
         <RouterLink to="/twilio">Twilio</RouterLink>
         <RouterLink to="/billing">Billing</RouterLink>
-        <RouterLink to="/admin">Administration</RouterLink>
+        <RouterLink to="/admin">Admin</RouterLink>
       </nav>
     </aside>
     <main class="main">
@@ -26,15 +25,13 @@
           <span class="pill">Facility: All</span>
           <span class="pill">NPI: All</span>
         </div>
-        <span class="pill">Theme: OS Adaptive</span>
-        <span class="pill">Operational Vue UI</span>
-        <span class="pill">API: {{ API_BASE }}</span>
       </div>
       <RouterView />
     </main>
+    <AdminWizardModal />
   </div>
 </template>
 
 <script setup lang="ts">
-import { API_BASE } from './api/client'
+import AdminWizardModal from './components/AdminWizardModal.vue'
 </script>

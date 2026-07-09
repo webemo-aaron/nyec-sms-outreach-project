@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { api, demoAuditEvents, type AuditEvent, type ResetLocalDataResult } from '../api/client'
+import { useAdminWizard } from '../components/useAdminWizard'
 
 const auditEvents = ref<AuditEvent[]>([])
 const auditSource = ref<'live' | 'demo'>('live')
@@ -8,6 +9,7 @@ const auditError = ref('')
 const resetResult = ref<ResetLocalDataResult | null>(null)
 const resetError = ref('')
 const isResetting = ref(false)
+const { openWizard } = useAdminWizard()
 
 async function loadAuditEvents() {
   try {
@@ -22,7 +24,7 @@ async function loadAuditEvents() {
 }
 
 async function resetLocalData() {
-  const confirmed = window.confirm('Reset local API data for laptop testing?')
+  const confirmed = window.confirm('Reset local laptop test data?')
   if (!confirmed) return
 
   isResetting.value = true
@@ -51,7 +53,10 @@ onMounted(loadAuditEvents)
 <template>
   <section class="page-title">
     <h1>Administration</h1>
-    <p>Reset local data intentionally, then inspect recent audit activity to verify operational flows.</p>
+    <p>Reset local data and review audit activity.</p>
+    <div class="actions section">
+      <button class="btn danger" type="button" @click="openWizard('reset')">Reset Local Data</button>
+    </div>
   </section>
 
   <section class="grid cols-2 section">
@@ -59,12 +64,12 @@ onMounted(loadAuditEvents)
       <div class="section-header">
         <div>
           <h2>Local Reset</h2>
-          <p>Keep this explicit. The button remains visible even before the backend route is ready.</p>
+          <p>Reset test data only after confirming scope.</p>
         </div>
       </div>
 
       <div class="surface-note warn">
-        <p>This action is intended for laptop testing against the Node API only.</p>
+        <p>Laptop test data only.</p>
       </div>
 
       <div class="actions">
@@ -92,15 +97,12 @@ onMounted(loadAuditEvents)
       <div class="section-header">
         <div>
           <h2>Audit Feed Status</h2>
-          <p>Use this to confirm whether test actions are landing in the audit trail.</p>
+          <p>Confirm test actions in the audit trail.</p>
         </div>
       </div>
 
-      <div v-if="auditSource === 'live'" class="surface-note good">
-        <p>Audit events are loading from the Node API.</p>
-      </div>
-      <div v-else class="surface-note warn">
-        <p>Showing seeded audit events because the audit API load failed: {{ auditError }}</p>
+      <div v-if="auditSource === 'demo'" class="surface-note warn">
+        <p>Unable to refresh audit events: {{ auditError }}</p>
       </div>
     </div>
   </section>
@@ -134,7 +136,7 @@ onMounted(loadAuditEvents)
       </table>
     </div>
     <div v-else class="empty-state">
-      No audit events have been returned yet.
+      No audit events found.
     </div>
   </section>
 </template>

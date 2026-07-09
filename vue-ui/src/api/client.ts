@@ -312,7 +312,7 @@ export const demoCampaigns: CampaignSummary[] = [
     remaining: 1100,
     mefBatchId: 12,
     messageBody:
-      'Hello {{FirstName}}, your healthcare provider has requested that you complete a secure questionnaire. Please visit {{SurveyLink}}.'
+      'Hello {{FirstName}}, please complete the NYeC outreach questionnaire: {{SurveyLink}}.'
   },
   {
     id: 102,
@@ -343,10 +343,10 @@ export const demoCampaignDetail: CampaignDetail = {
   customerName: 'NYC Health Partner',
   facilityName: 'NYC Health Center A',
   facilityCode: 'NYC-A',
-  externalSurveyBaseUrl: 'https://survey.customer.org/register',
+  externalSurveyBaseUrl: 'https://outreach.example.org/register',
   startDate: '2026-07-13',
   startTime: '09:00',
-  notes: 'Seeded local demo snapshot.'
+  notes: 'Local demo snapshot.'
 }
 
 export const demoCampaignDispatchBatches: CampaignDispatchBatch[] = [

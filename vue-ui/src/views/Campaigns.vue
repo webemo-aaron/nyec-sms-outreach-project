@@ -10,6 +10,7 @@ import {
   type CampaignDispatchBatch,
   type CampaignSummary
 } from '../api/client'
+import { useAdminWizard } from '../components/useAdminWizard'
 
 const campaigns = ref<CampaignSummary[]>([])
 const campaignSource = ref<'live' | 'demo'>('live')
@@ -21,6 +22,7 @@ const detailError = ref('')
 const actionError = ref('')
 const actionMessage = ref('')
 const activeAction = ref('')
+const { openWizard } = useAdminWizard()
 
 async function loadCampaigns() {
   listError.value = ''
@@ -93,15 +95,16 @@ onMounted(loadCampaigns)
 <template>
   <section class="page-title">
     <h1>Outreach Campaigns</h1>
-    <p>Work with the real campaign list, inspect detail, and trigger launch, pause, or manual dispatch against the Node API.</p>
+    <p>Review campaigns and run launch, pause, or dispatch actions.</p>
+    <div class="actions section">
+      <button class="btn" type="button" @click="openWizard('campaign')">Create Campaign</button>
+      <button class="btn secondary" type="button" @click="openWizard('dispatch')">Run Dispatch</button>
+    </div>
   </section>
 
-  <section class="section">
-    <div v-if="campaignSource === 'live'" class="surface-note good">
-      <p>Campaigns are loading from the Node API.</p>
-    </div>
-    <div v-else class="surface-note warn">
-      <p>Showing seeded campaigns because the campaign API load failed: {{ listError }}</p>
+  <section v-if="campaignSource === 'demo'" class="section">
+    <div class="surface-note warn">
+      <p>Unable to refresh campaigns: {{ listError }}</p>
     </div>
   </section>
 
@@ -110,9 +113,9 @@ onMounted(loadCampaigns)
       <div class="section-header">
         <div>
           <h2>Campaign List</h2>
-          <p>Launch, pause, and manual dispatch stay visible even while backend endpoints are still coming online.</p>
+          <p>Launch, pause, or run a manual dispatch.</p>
         </div>
-        <RouterLink class="btn" to="/campaigns/new">New Campaign</RouterLink>
+        <button class="btn" type="button" @click="openWizard('campaign')">Create Campaign</button>
       </div>
 
       <div v-if="campaigns.length" class="table-wrap">
@@ -171,7 +174,7 @@ onMounted(loadCampaigns)
         </table>
       </div>
       <div v-else class="empty-state">
-        No campaigns have been returned yet.
+        No campaigns found.
       </div>
 
       <div v-if="actionMessage" class="surface-note good section">
@@ -186,7 +189,7 @@ onMounted(loadCampaigns)
       <div class="section-header">
         <div>
           <h2>Selected Campaign Detail</h2>
-          <p v-if="selectedCampaign">Inspect the live or fallback campaign payload and recent dispatch batches.</p>
+          <p v-if="selectedCampaign">Review campaign details and recent dispatch batches.</p>
           <p v-else>Select a campaign to load detail.</p>
         </div>
       </div>
@@ -206,7 +209,7 @@ onMounted(loadCampaigns)
 
         <div class="preview-box section">
           <strong>Message Body</strong>
-          <p>{{ selectedCampaign.messageBody ?? 'Message body was not returned by the detail endpoint.' }}</p>
+          <p>{{ selectedCampaign.messageBody ?? 'Message body unavailable.' }}</p>
         </div>
 
         <div class="section">
@@ -238,7 +241,7 @@ onMounted(loadCampaigns)
             </table>
           </div>
           <div v-else class="empty-state">
-            No campaign dispatch batches were returned.
+            No campaign dispatch batches found.
           </div>
         </div>
       </div>
